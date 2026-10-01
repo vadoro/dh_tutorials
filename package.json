@@ -1,0 +1,15 @@
+{
+  "name": "network-tutorial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "네트워크 분석의 개념과 원리를 설명하는 인터랙티브 모션그래픽 영상",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8080 .",
+    "render": "node tools/render-video.cjs",
+    "render:preview": "node tools/render-video.cjs --width 1280 --fps 24 --out video/preview.mp4",
+    "build:standalone": "node tools/build-standalone.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1"
+  }
+}
