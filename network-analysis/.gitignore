@@ -1,0 +1,5 @@
+node_modules/
+dist/
+video/preview.mp4
+video/.chapters.txt
+.DS_Store

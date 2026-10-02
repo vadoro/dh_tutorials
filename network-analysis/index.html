@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>점과 선의 과학</title>
+<meta name="description" content="네트워크 분석의 개념과 원리를 7분짜리 인터랙티브 모션그래픽 영상으로 쉽게 배웁니다. 노드와 링크, 연결정도, 경로, 밀도, 중심성, 군집 계수, 커뮤니티, 네트워크 모델까지.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#watch" aria-label="점과 선의 과학 — 처음으로">
+    <svg class="mark" viewBox="0 0 40 40" aria-hidden="true">
+      <line x1="9" y1="29" x2="20" y2="9" />
+      <line x1="20" y1="9" x2="31" y2="27" />
+      <line x1="9" y1="29" x2="31" y2="27" />
+      <circle cx="9" cy="29" r="5" class="c1" />
+      <circle cx="20" cy="9" r="5" class="c2" />
+      <circle cx="31" cy="27" r="5" class="c3" />
+    </svg>
+    <span>점과 선의 과학</span>
+  </a>
+  <nav aria-label="페이지 안 이동">
+    <a href="#watch">영상</a>
+    <a href="#playground">놀이터</a>
+    <a href="#quiz">퀴즈</a>
+    <a href="#glossary">용어집</a>
+  </nav>
+</header>
+
+<main>
+  <section class="intro" aria-labelledby="intro-title">
+    <p class="eyebrow">네트워크 분석 입문 · 인터랙티브 모션그래픽</p>
+    <h1 id="intro-title">점과 선으로 세상의 연결을 읽는 법</h1>
+    <p class="lede">친구 관계, 지하철, 인터넷, 논문 인용. 모두 <b>노드</b>(점)와 <b>링크</b>(선)로 그릴 수 있습니다. 이 영상은 네트워크 분석에 꼭 필요한 개념과 원리를 <span id="total-time">7:00</span> 동안 하나씩 움직이는 그림으로 보여 줍니다. 아무 때나 멈추고 화면 속 네트워크를 직접 만져 보세요.</p>
+    <ul class="facts">
+      <li><b>13</b>개 장면</li>
+      <li>자막 · 음성 해설</li>
+      <li>장면마다 직접 해 보기</li>
+      <li><a href="video/network-analysis.mp4" data-video-link>MP4 영상 파일</a></li>
+    </ul>
+  </section>
+
+  <section id="watch" class="watch" aria-label="영상">
+    <div class="player" id="player">
+      <div class="stage">
+        <canvas id="screen" width="1280" height="720" role="img" aria-label="네트워크 분석 개념을 설명하는 애니메이션 화면. 아래 자막과 오른쪽 패널에 같은 내용이 글로 나옵니다."></canvas>
+        <button id="poster" class="poster" type="button" aria-label="영상 처음부터 재생">
+          <span class="poster-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg></span>
+          <span class="poster-text">처음부터 재생</span>
+        </button>
+      </div>
+      <div class="controls">
+        <div class="track" id="track" role="slider" tabindex="0" aria-label="재생 위치 (화살표 키로 5초씩 이동)" aria-valuemin="0" aria-valuemax="420" aria-valuenow="0">
+          <div class="track-fill" id="track-fill"></div>
+          <div class="track-knob" id="track-knob"></div>
+          <div class="track-tip" id="track-tip" aria-hidden="true"></div>
+        </div>
+        <div class="bar">
+          <button type="button" id="btn-prev" class="ic" aria-label="이전 장" title="이전 장 (Shift+←)"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+          <button type="button" id="btn-play" class="ic play" aria-label="재생" title="재생 (스페이스)">
+            <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>
+            <svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+          </button>
+          <button type="button" id="btn-next" class="ic" aria-label="다음 장" title="다음 장 (Shift+→)"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+          <button type="button" id="btn-back" class="ic" aria-label="10초 뒤로" title="10초 뒤로"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6l5 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg></button>
+          <span id="time" class="time">0:00 / 7:00</span>
+          <span class="now" id="now-chapter"></span>
+          <span class="spacer"></span>
+          <label class="speed" for="speed">속도
+            <select id="speed">
+              <option value="0.75">0.75×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.25">1.25×</option>
+              <option value="1.5">1.5×</option>
+            </select>
+          </label>
+          <button type="button" id="btn-cc" class="tg" aria-pressed="true" title="자막 켜기/끄기 (C)">자막</button>
+          <button type="button" id="btn-tts" class="tg" aria-pressed="false" title="브라우저 음성으로 자막 읽기">음성 해설</button>
+          <button type="button" id="btn-full" class="ic" aria-label="전체 화면" title="전체 화면 (F)"><svg viewBox="0 0 24 24"><path d="M4 9V4h5v2H6v3zm11-5h5v5h-2V6h-3zM6 15v3h3v2H4v-5zm12 0h2v5h-5v-2h3z"/></svg></button>
+        </div>
+        <p id="cc-text" class="cc-text">&nbsp;</p>
+        <p id="tts-note" class="tts-note" hidden>이 브라우저에는 한국어 음성이 설치되어 있지 않아 기본 음성으로 읽습니다. 음성이 자막을 다 읽을 때까지 영상이 기다려 줘요.</p>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="tryit" id="tryit" aria-live="polite"></div>
+      <div class="toc">
+        <h2 class="toc-title">목차</h2>
+        <ol class="chapters" id="chapters"></ol>
+        <p class="keys">스페이스 재생/정지 · ←→ 5초 · Shift+←→ 장 이동 · C 자막 · F 전체 화면</p>
+      </div>
+    </aside>
+  </section>
+
+  <section id="playground" class="block" aria-labelledby="pg-title">
+    <div class="block-head">
+      <p class="eyebrow">놀이터</p>
+      <h2 id="pg-title">직접 만들고 바로 재 보기</h2>
+      <p>빈 곳을 <b>클릭</b>하면 노드가 생기고, 노드 하나를 클릭한 뒤 다른 노드를 클릭하면 <b>링크</b>가 생기거나 없어져요. 끌어서 옮기고, <b>더블클릭</b>하면 지워집니다. 지표는 바뀔 때마다 다시 계산돼요.</p>
+    </div>
+    <div class="pg-tools">
+      <label for="pg-preset">예제
+        <select id="pg-preset">
+          <option value="kite">연(kite) — 영상 속 10명</option>
+          <option value="two">두 무리와 다리</option>
+          <option value="star">별 모양</option>
+          <option value="ring">고리 모양</option>
+          <option value="complete">완전 연결</option>
+          <option value="random">무작위 네트워크</option>
+          <option value="smallworld">작은 세상 네트워크</option>
+          <option value="scalefree">척도 없는 네트워크</option>
+          <option value="empty">빈 화면</option>
+        </select>
+      </label>
+      <label for="pg-size">노드 크기
+        <select id="pg-size">
+          <option value="degree">연결정도 중심성</option>
+          <option value="close">근접 중심성</option>
+          <option value="betw">매개 중심성</option>
+          <option value="eig">아이겐벡터 중심성</option>
+          <option value="clust">군집 계수</option>
+          <option value="none">모두 같게</option>
+        </select>
+      </label>
+      <label class="check" for="pg-color"><input type="checkbox" id="pg-color" checked> 커뮤니티 색칠</label>
+      <button type="button" id="pg-physics" aria-pressed="true">자동 정리 켜짐</button>
+      <button type="button" id="pg-delete">선택 노드 삭제</button>
+      <button type="button" id="pg-clear">모두 지우기</button>
+    </div>
+    <div class="pg-grid">
+      <div class="pg-stage">
+        <canvas id="pg-canvas" width="1280" height="720" tabindex="0" aria-label="네트워크 편집 화면. 오른쪽 표에 지표가 글로 표시됩니다."></canvas>
+      </div>
+      <div class="pg-side">
+        <dl class="stats" id="pg-stats"></dl>
+        <div class="rank">
+          <h3 id="pg-rank-title">연결정도 상위 5</h3>
+          <ol id="pg-rank"></ol>
+        </div>
+        <div class="detail" id="pg-detail"></div>
+      </div>
+    </div>
+    <details class="io" id="pg-io">
+      <summary>엣지 리스트로 내보내기 · 불러오기</summary>
+      <p>한 줄에 <code>노드1,노드2</code> 형식으로 적은 엣지 리스트(CSV)를 붙여 넣으면 내 데이터로 네트워크를 그려 볼 수 있어요. 첫 줄이 <code>source,target</code>이면 머리글로 보고 건너뜁니다.</p>
+      <textarea id="pg-csv" rows="7" spellcheck="false" aria-label="엣지 리스트 입력칸">source,target
+지민,서준
+서준,하윤
+하윤,지민
+하윤,도윤
+도윤,수아
+수아,예준
+예준,도윤</textarea>
+      <div class="row">
+        <button type="button" id="pg-import">붙여 넣은 데이터로 그리기</button>
+        <button type="button" id="pg-copy">지금 네트워크를 CSV로 복사</button>
+        <span id="pg-copy-msg" class="muted" role="status"></span>
+      </div>
+    </details>
+  </section>
+
+  <section id="quiz" class="block" aria-labelledby="quiz-title">
+    <div class="block-head">
+      <p class="eyebrow">퀴즈</p>
+      <h2 id="quiz-title">열 문제로 확인하기</h2>
+      <p>영상에서 다룬 순서대로 나옵니다. 답을 고르면 바로 해설이 나와요.</p>
+    </div>
+    <ol class="quiz" id="quiz-list"></ol>
+    <div class="quiz-foot">
+      <p id="quiz-score" role="status"></p>
+      <button type="button" id="quiz-reset">처음부터 다시 풀기</button>
+    </div>
+  </section>
+
+  <section id="glossary" class="block" aria-labelledby="glo-title">
+    <div class="block-head">
+      <p class="eyebrow">용어집</p>
+      <h2 id="glo-title">한 줄로 정리한 개념과 공식</h2>
+      <p>n은 노드 수, L은 링크 수, k는 한 노드의 연결정도, d(i,j)는 두 노드 사이의 거리입니다.</p>
+    </div>
+    <div class="glossary">
+      <div class="g-group">
+        <h3>재료</h3>
+        <dl>
+          <dt>노드 <span>node · vertex</span></dt><dd>네트워크를 이루는 점. 사람, 기관, 역, 웹페이지, 단어처럼 분석하려는 대상.</dd>
+          <dt>링크 · 엣지 <span>link · edge · tie</span></dt><dd>두 노드 사이의 관계. 친구, 거래, 인용, 함께 등장 등.</dd>
+          <dt>방향 네트워크 <span>directed</span></dt><dd>관계에 방향이 있는 네트워크. A→B와 B→A가 다를 수 있어요(팔로우, 인용).</dd>
+          <dt>가중 네트워크 <span>weighted</span></dt><dd>링크에 세기(가중치)가 있는 네트워크. 연락 횟수, 거래액 등.</dd>
+        </dl>
+      </div>
+      <div class="g-group">
+        <h3>데이터</h3>
+        <dl>
+          <dt>엣지 리스트 <span>edge list</span></dt><dd>연결된 두 노드를 한 줄에 하나씩 적은 표. 가장 흔한 저장 형식(CSV).</dd>
+          <dt>인접 행렬 <span>adjacency matrix</span></dt><dd>n×n 표에서 i와 j가 연결되면 1, 아니면 0. 무방향이면 대각선 기준 대칭.</dd>
+          <dt>연결 덩어리 <span>component</span></dt><dd>서로 경로로 이어진 노드들의 묶음. 끊긴 조각의 개수를 셉니다.</dd>
+        </dl>
+      </div>
+      <div class="g-group">
+        <h3>기본 지표</h3>
+        <dl>
+          <dt>연결정도 <span>degree</span></dt><dd>한 노드에 붙은 링크 수. 방향 네트워크에서는 들어오는 링크(in-degree)와 나가는 링크(out-degree)를 따로 셉니다.</dd>
+          <dt>허브 <span>hub</span></dt><dd>연결정도가 유난히 높은 노드.</dd>
+          <dt>최단 경로 · 거리 <span>shortest path · distance</span></dt><dd>두 노드를 잇는 가장 짧은 길과 그 길의 링크 수.</dd>
+          <dt>지름 · 평균 경로 길이 <span>diameter · average path length</span></dt><dd>모든 쌍의 거리 중 최댓값과 평균값.</dd>
+          <dt>밀도 <span>density</span></dt><dd>실제 링크 ÷ 가능한 링크. <code>2L ÷ n(n−1)</code> (무방향), <code>L ÷ n(n−1)</code> (방향).</dd>
+          <dt>군집 계수 <span>clustering coefficient</span></dt><dd>내 이웃끼리 실제로 연결된 쌍 ÷ 가능한 쌍. <code>2e ÷ k(k−1)</code>, e는 이웃 사이 링크 수.</dd>
+        </dl>
+      </div>
+      <div class="g-group">
+        <h3>중심성</h3>
+        <dl>
+          <dt>연결정도 중심성 <span>degree centrality</span></dt><dd>링크가 많을수록 중요. <code>k ÷ (n−1)</code>.</dd>
+          <dt>근접 중심성 <span>closeness centrality</span></dt><dd>다른 모든 노드까지 가까울수록 중요. <code>(n−1) ÷ Σ d(i,j)</code>.</dd>
+          <dt>매개 중심성 <span>betweenness centrality</span></dt><dd>다른 노드 쌍의 최단 경로 위에 자주 놓일수록 중요. 다리, 문지기 역할.</dd>
+          <dt>아이겐벡터 중심성 <span>eigenvector centrality</span></dt><dd>중요한 노드와 연결될수록 중요. 구글 페이지랭크(PageRank)가 이 생각을 발전시킨 것.</dd>
+        </dl>
+      </div>
+      <div class="g-group">
+        <h3>구조</h3>
+        <dl>
+          <dt>커뮤니티 <span>community</span></dt><dd>안쪽은 촘촘하고 바깥과는 듬성듬성한 노드 무리.</dd>
+          <dt>모듈성 <span>modularity</span></dt><dd>무리 안쪽 링크가 무작위로 기대되는 양보다 얼마나 많은지 재는 점수. 보통 0.3 이상이면 뚜렷한 편.</dd>
+          <dt>약한 연결 <span>weak ties</span></dt><dd>서로 다른 무리를 잇는 느슨한 관계. 새로운 정보가 이 길로 들어온다는 그라노베터의 이론.</dd>
+        </dl>
+      </div>
+      <div class="g-group">
+        <h3>모델</h3>
+        <dl>
+          <dt>무작위 네트워크 <span>Erdős–Rényi</span></dt><dd>모든 쌍을 같은 확률로 연결. 연결정도가 평균 근처에 몰립니다.</dd>
+          <dt>작은 세상 네트워크 <span>Watts–Strogatz</span></dt><dd>촘촘한 이웃 + 몇 개의 지름길. 군집 계수는 높고 평균 거리는 짧아요.</dd>
+          <dt>척도 없는 네트워크 <span>Barabási–Albert</span></dt><dd>새 노드가 인기 노드에 붙는 선호적 연결로 소수의 허브가 생깁니다.</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="more">
+      <h3>더 알아보기</h3>
+      <ul>
+        <li><a href="https://networkx.org/" target="_blank" rel="noopener">NetworkX</a> — 파이썬 네트워크 분석 라이브러리 (영상 속 코드)</li>
+        <li><a href="https://gephi.org/" target="_blank" rel="noopener">Gephi</a> — 코딩 없이 네트워크를 그리고 지표를 계산하는 프로그램</li>
+        <li><a href="https://igraph.org/" target="_blank" rel="noopener">igraph</a> — R과 파이썬에서 쓰는 빠른 네트워크 분석 도구</li>
+        <li><a href="https://networksciencebook.com/" target="_blank" rel="noopener">Network Science</a> — 바라바시의 무료 온라인 교재 (영문)</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>점과 선의 과학 · 네트워크 분석 입문. 모든 그림은 브라우저에서 실시간으로 계산해 그립니다. 영상 속 숫자(중심성, 밀도, 모듈성)는 실제 알고리즘으로 계산한 값이에요.</p>
+</footer>
+
+<script src="assets/js/core.js"></script>
+<script src="assets/js/draw.js"></script>
+<script src="assets/js/scenes-a.js"></script>
+<script src="assets/js/scenes-b.js"></script>
+<script src="assets/js/player.js"></script>
+<script src="assets/js/playground.js"></script>
+<script src="assets/js/quiz.js"></script>
+</body>
+</html>
