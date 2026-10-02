@@ -1,0 +1,50 @@
+/* DH 튜토리얼 공통 부품: 퀴즈(.dhq) · 용어집(.dh-gloss)
+ *
+ * 튜토리얼마다 색과 글꼴이 다르므로, 아래 변수를 그 튜토리얼의 토큰에 연결해 쓰세요.
+ * 밝은/어두운 테마는 튜토리얼 토큰이 바뀌면 그대로 따라갑니다.
+ *   :root {
+ *     --dh-text: …; --dh-muted: …; --dh-surface: …; --dh-surface-2: …; --dh-line: …;
+ *     --dh-accent: …;   (번호, 용어집 제목)
+ *     --dh-ok: …; --dh-no: …;   (정답/오답)
+ *     --dh-display: …;  (용어집 제목 글꼴)
+ *     --dh-mono: …;
+ *   }
+ */
+
+/* ---------- 퀴즈 ---------- */
+.dhq { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 12px; align-items: start; }
+.dhq-item { min-width: 0; padding: 14px 16px; border: 1px solid var(--dh-line, #D6DDE0); border-radius: 12px; background: var(--dh-surface, #FFFFFF); color: var(--dh-text, #14212B); }
+.dhq-item.ok { border-color: var(--dh-ok, #1E8A5A); }
+.dhq-item.no { border-color: var(--dh-no, #C2412D); }
+.dhq-q { margin: 0 0 10px; font-weight: 600; line-height: 1.55; }
+.dhq-n { margin-right: 8px; font-family: var(--dh-mono, ui-monospace, Menlo, monospace); color: var(--dh-accent, #B8432B); }
+.dhq-opts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.dhq-opts.dhq-short { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dhq .dhq-opts button {
+  min-height: 38px; padding: 7px 12px; border: 1px solid var(--dh-line, #D6DDE0); border-radius: 9px;
+  background: var(--dh-surface-2, #EEF2F2); color: var(--dh-text, #14212B);
+  font: inherit; font-size: 14.5px; line-height: 1.45; text-align: left; cursor: pointer;
+}
+.dhq .dhq-opts button:hover:not(:disabled) { border-color: var(--dh-accent, #B8432B); }
+.dhq .dhq-opts button:disabled { cursor: default; }
+.dhq .dhq-opts button.right { border-color: var(--dh-ok, #1E8A5A); color: var(--dh-ok, #1E8A5A); font-weight: 600; }
+.dhq .dhq-opts button.wrong { border-color: var(--dh-no, #C2412D); color: var(--dh-no, #C2412D); text-decoration: line-through; }
+.dhq-opts.dhq-keys { display: flex; flex-wrap: wrap; }
+.dhq .dhq-opts.dhq-keys button { min-width: 44px; text-align: center; font-family: var(--dh-mono, ui-monospace, Menlo, monospace); }
+.dhq-fig { display: block; width: 100%; height: auto; margin-bottom: 8px; border-radius: 9px; background: #0B1820; }
+.dhq-why { margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: var(--dh-muted, #56656F); }
+.dhq-item.ok .dhq-why b { color: var(--dh-ok, #1E8A5A); }
+.dhq-item.no .dhq-why b { color: var(--dh-no, #C2412D); }
+.dhq-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 14px; }
+.dhq-foot p { margin: 0; font-weight: 600; }
+@media (max-width: 480px) { .dhq-opts.dhq-short { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- 용어집 ---------- */
+.dh-gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 12px; align-items: start; }
+.dh-gloss > section { min-width: 0; padding: 14px 18px 16px; border: 1px solid var(--dh-line, #D6DDE0); border-radius: 12px; background: var(--dh-surface, #FFFFFF); color: var(--dh-text, #14212B); }
+.dh-gloss h3 { margin: 0 0 4px; font-family: var(--dh-display, inherit); font-size: 20px; font-weight: 700; line-height: 1.3; color: var(--dh-accent, #B8432B); }
+.dh-gloss dl { margin: 0; }
+.dh-gloss dt { margin-top: 10px; font-weight: 700; }
+.dh-gloss dt span { margin-left: 6px; font-family: var(--dh-mono, ui-monospace, Menlo, monospace); font-size: 12px; font-weight: 400; color: var(--dh-muted, #56656F); }
+.dh-gloss dd { margin: 2px 0 0; font-size: 14.5px; line-height: 1.6; color: var(--dh-muted, #56656F); }
+.dh-gloss code { padding: 0 4px; border: 1px solid var(--dh-line, #D6DDE0); border-radius: 5px; background: var(--dh-surface-2, #EEF2F2); color: var(--dh-text, #14212B); font-family: var(--dh-mono, ui-monospace, Menlo, monospace); font-size: 0.86em; }

@@ -65,6 +65,10 @@ node tools/render-video.mjs video/bertopic-explainer.mp4 30
 
 스크립트는 `index.html#export`를 열어 시간마다 캔버스를 그린 뒤 프레임을 ffmpeg로 넘깁니다. 애니메이션이 시간의 함수로만 그려지기 때문에 녹화 결과가 매번 똑같아요.
 
+사이트 공통 렌더러로도 뽑을 수 있어요. 저장소 루트에서 `node tools/render-video.cjs bertopic` → 장 표시와 `.srt` 자막 원고까지 함께 만들어요.
+
+음성 해설과 퀴즈 화면은 사이트 공통 부품(`../shared/narration.js`, `../shared/quiz.js`, `../shared/components.css`)을 씁니다. 이 페이지에는 약어 읽기 규칙과 퀴즈 문제만 들어 있어요.
+
 ## 참고
 
 - BERTopic 공식 문서: https://maartengr.github.io/BERTopic/

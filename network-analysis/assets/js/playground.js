@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const NA = window.NA;
-  if (!NA || new URLSearchParams(location.search).has('render')) return;
+  if (!NA || new URLSearchParams(location.search).has('render') || location.hash === '#export') return;
   const { U, C, D, G } = NA;
   const cv = document.getElementById('pg-canvas');
   if (!cv) return;

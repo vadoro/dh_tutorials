@@ -27,18 +27,26 @@ index.html              사이트 첫 화면 (튜토리얼 카드 목록)
 assets/catalog.js       튜토리얼 목록 — 새 튜토리얼은 여기에 한 항목 추가
 assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바
 assets/site.css         사이트 페이지 디자인
+shared/                 튜토리얼이 함께 쓰는 부품: 음성 해설, 퀴즈, 퀴즈·용어집 모양
+_template/              새 튜토리얼의 출발점 (복사해서 씀, 사이트 목록에는 안 나옴)
+tools/render-video.cjs  어느 튜토리얼이든 MP4·자막 원고·미리보기 그림으로 내보내기
 network-analysis/       점과 선의 과학 (네트워크 분석)
 bertopic/               BERTopic 토픽 지도 (토픽 모델링)
 CLAUDE.md               새 튜토리얼을 만들 때 지킬 규칙과 확인 목록
 ```
 
-튜토리얼마다 폴더 안에서 완결됩니다. 각 폴더의 README에 장면 구성, 조작법, 영상 다시 만드는 법이 있어요.
+튜토리얼마다 폴더 안에서 완결되고, 사이트 공통 파일(`assets/`, `shared/`)만 `../`로 불러옵니다. 각 폴더의 README에 장면 구성, 조작법, 영상 다시 만드는 법이 있어요.
 
 ## 튜토리얼 추가하기
 
-1. `<slug>/index.html`을 만들고 `<body>` 바로 다음에 공통 상단 바를 넣습니다.
-2. `assets/catalog.js`에 항목을 추가하고, `<slug>/docs/poster.jpg` 미리보기를 둡니다.
-3. 이 README의 표에 한 줄을 추가합니다.
+1. 템플릿을 복사합니다: `cp -r _template word-embedding`. 템플릿은 34초짜리 예시 영상(단어 세기)과 직접 해 보기, 놀이터, 퀴즈, 용어집이 모두 동작하는 한 파일짜리 튜토리얼이에요. 브라우저로 `_template/index.html`을 열어 먼저 살펴보세요.
+2. 새 폴더의 `index.html`에서 상단 바의 `data-slug`, 장면(`CHAPTERS`, `CAPTIONS`, `SCENES`), 놀이터, 퀴즈, 용어집을 내용에 맞게 바꿉니다.
+3. 영상과 미리보기 그림을 만듭니다(Node.js, ffmpeg 필요. 처음 한 번 `npm install --no-save playwright && npx playwright install chromium`).
+   ```bash
+   node tools/render-video.cjs word-embedding               # → word-embedding/video/word-embedding.mp4 + .srt
+   node tools/render-video.cjs word-embedding --poster 26   # → word-embedding/docs/poster.jpg
+   ```
+4. `assets/catalog.js`에 항목을 추가하면 첫 화면에 카드가 생깁니다. 이 README의 표에도 한 줄을 추가합니다.
 
 자세한 규칙(장면 형식, 음성 해설 동작, 퀴즈·용어집 형식, 영상 렌더링, 확인 목록)은 [CLAUDE.md](CLAUDE.md)에 있습니다.
 

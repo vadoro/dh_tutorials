@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../shared/components.css">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
@@ -172,8 +173,8 @@
       <h2 id="quiz-title">열 문제로 확인하기</h2>
       <p>영상에서 다룬 순서대로 나옵니다. 답을 고르면 바로 해설이 나와요.</p>
     </div>
-    <ol class="quiz" id="quiz-list"></ol>
-    <div class="quiz-foot">
+    <ol id="quiz-list"></ol>
+    <div class="dhq-foot">
       <p id="quiz-score" role="status"></p>
       <button type="button" id="quiz-reset">처음부터 다시 풀기</button>
     </div>
@@ -185,8 +186,8 @@
       <h2 id="glo-title">한 줄로 정리한 개념과 공식</h2>
       <p>n은 노드 수, L은 링크 수, k는 한 노드의 연결정도, d(i,j)는 두 노드 사이의 거리입니다.</p>
     </div>
-    <div class="glossary">
-      <div class="g-group">
+    <div class="dh-gloss">
+      <section>
         <h3>재료</h3>
         <dl>
           <dt>노드 <span>node · vertex</span></dt><dd>네트워크를 이루는 점. 사람, 기관, 역, 웹페이지, 단어처럼 분석하려는 대상.</dd>
@@ -194,16 +195,16 @@
           <dt>방향 네트워크 <span>directed</span></dt><dd>관계에 방향이 있는 네트워크. A→B와 B→A가 다를 수 있어요(팔로우, 인용).</dd>
           <dt>가중 네트워크 <span>weighted</span></dt><dd>링크에 세기(가중치)가 있는 네트워크. 연락 횟수, 거래액 등.</dd>
         </dl>
-      </div>
-      <div class="g-group">
+      </section>
+      <section>
         <h3>데이터</h3>
         <dl>
           <dt>엣지 리스트 <span>edge list</span></dt><dd>연결된 두 노드를 한 줄에 하나씩 적은 표. 가장 흔한 저장 형식(CSV).</dd>
           <dt>인접 행렬 <span>adjacency matrix</span></dt><dd>n×n 표에서 i와 j가 연결되면 1, 아니면 0. 무방향이면 대각선 기준 대칭.</dd>
           <dt>연결 덩어리 <span>component</span></dt><dd>서로 경로로 이어진 노드들의 묶음. 끊긴 조각의 개수를 셉니다.</dd>
         </dl>
-      </div>
-      <div class="g-group">
+      </section>
+      <section>
         <h3>기본 지표</h3>
         <dl>
           <dt>연결정도 <span>degree</span></dt><dd>한 노드에 붙은 링크 수. 방향 네트워크에서는 들어오는 링크(in-degree)와 나가는 링크(out-degree)를 따로 셉니다.</dd>
@@ -213,8 +214,8 @@
           <dt>밀도 <span>density</span></dt><dd>실제 링크 ÷ 가능한 링크. <code>2L ÷ n(n−1)</code> (무방향), <code>L ÷ n(n−1)</code> (방향).</dd>
           <dt>군집 계수 <span>clustering coefficient</span></dt><dd>내 이웃끼리 실제로 연결된 쌍 ÷ 가능한 쌍. <code>2e ÷ k(k−1)</code>, e는 이웃 사이 링크 수.</dd>
         </dl>
-      </div>
-      <div class="g-group">
+      </section>
+      <section>
         <h3>중심성</h3>
         <dl>
           <dt>연결정도 중심성 <span>degree centrality</span></dt><dd>링크가 많을수록 중요. <code>k ÷ (n−1)</code>.</dd>
@@ -222,23 +223,23 @@
           <dt>매개 중심성 <span>betweenness centrality</span></dt><dd>다른 노드 쌍의 최단 경로 위에 자주 놓일수록 중요. 다리, 문지기 역할.</dd>
           <dt>아이겐벡터 중심성 <span>eigenvector centrality</span></dt><dd>중요한 노드와 연결될수록 중요. 구글 페이지랭크(PageRank)가 이 생각을 발전시킨 것.</dd>
         </dl>
-      </div>
-      <div class="g-group">
+      </section>
+      <section>
         <h3>구조</h3>
         <dl>
           <dt>커뮤니티 <span>community</span></dt><dd>안쪽은 촘촘하고 바깥과는 듬성듬성한 노드 무리.</dd>
           <dt>모듈성 <span>modularity</span></dt><dd>무리 안쪽 링크가 무작위로 기대되는 양보다 얼마나 많은지 재는 점수. 보통 0.3 이상이면 뚜렷한 편.</dd>
           <dt>약한 연결 <span>weak ties</span></dt><dd>서로 다른 무리를 잇는 느슨한 관계. 새로운 정보가 이 길로 들어온다는 그라노베터의 이론.</dd>
         </dl>
-      </div>
-      <div class="g-group">
+      </section>
+      <section>
         <h3>모델</h3>
         <dl>
           <dt>무작위 네트워크 <span>Erdős–Rényi</span></dt><dd>모든 쌍을 같은 확률로 연결. 연결정도가 평균 근처에 몰립니다.</dd>
           <dt>작은 세상 네트워크 <span>Watts–Strogatz</span></dt><dd>촘촘한 이웃 + 몇 개의 지름길. 군집 계수는 높고 평균 거리는 짧아요.</dd>
           <dt>척도 없는 네트워크 <span>Barabási–Albert</span></dt><dd>새 노드가 인기 노드에 붙는 선호적 연결로 소수의 허브가 생깁니다.</dd>
         </dl>
-      </div>
+      </section>
     </div>
     <div class="more">
       <h3>더 알아보기</h3>
@@ -256,6 +257,8 @@
   <p>점과 선의 과학 · 네트워크 분석 입문. 모든 그림은 브라우저에서 실시간으로 계산해 그립니다. 영상 속 숫자(중심성, 밀도, 모듈성)는 실제 알고리즘으로 계산한 값이에요.</p>
 </footer>
 
+<script src="../shared/narration.js"></script>
+<script src="../shared/quiz.js"></script>
 <script src="assets/js/core.js"></script>
 <script src="assets/js/draw.js"></script>
 <script src="assets/js/scenes-a.js"></script>

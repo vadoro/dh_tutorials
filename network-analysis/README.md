@@ -75,9 +75,10 @@ assets/js/core.js          유틸리티와 그래프 알고리즘
 assets/js/draw.js          캔버스 그리기 도우미 (노드, 링크, 자막, 아이콘)
 assets/js/scenes-a.js      장면 00~06
 assets/js/scenes-b.js      장면 07~12
-assets/js/player.js        타임라인, 컨트롤, 자막, 음성 해설, 렌더 모드
+assets/js/player.js        타임라인, 컨트롤, 자막, 렌더 모드
 assets/js/playground.js    놀이터
-assets/js/quiz.js          퀴즈
+assets/js/quiz.js          퀴즈 문제 (화면은 사이트 공통 부품이 그림)
+../shared/                 사이트 공통 부품: 음성 해설, 퀴즈, 퀴즈·용어집 모양
 examples/                  NetworkX 예제 코드와 CSV
 tools/render-video.cjs     MP4로 내보내기
 tools/build-standalone.cjs 파일 하나짜리 HTML 만들기
@@ -97,7 +98,9 @@ npm run render:preview    # 빠른 미리보기 (1280×720, 24fps)
 node tools/render-video.cjs --from 198 --to 264 --out video/centrality.mp4   # 원하는 구간만
 ```
 
-`index.html?render`로 열면 플레이어가 렌더 모드가 되어, 정해진 시각의 장면을 그대로 그립니다. 모든 난수는 시드가 고정되어 있어 같은 시각이면 항상 같은 그림이 나옵니다.
+사이트 공통 렌더러로도 똑같이 뽑을 수 있어요. 저장소 루트에서 `node tools/render-video.cjs network-analysis`.
+
+`index.html?render`(또는 `#export`)로 열면 플레이어가 렌더 모드가 되어, 정해진 시각의 장면을 그대로 그립니다. 모든 난수는 시드가 고정되어 있어 같은 시각이면 항상 같은 그림이 나옵니다.
 
 ## 장면 고치기 · 추가하기
 

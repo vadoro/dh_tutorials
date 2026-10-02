@@ -22,6 +22,10 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
 // 사이트 공통 상단 바(../assets/)는 파일 하나로 옮겨 다닐 때 쓸 수 없으므로 뺌
 html = html.replace(/<script src="\.\.\/assets\/[^"]+"[^>]*><\/script>\n?/g, '');
+// 사이트 공통 부품(../shared/: 음성 해설, 퀴즈, 용어집 스타일)은 파일 안에 넣음
+const readShared = (rel) => fs.readFileSync(path.join(ROOT, '..', 'shared', rel), 'utf8');
+html = html.replace(/<link rel="stylesheet" href="\.\.\/shared\/([^"]+)">/g, (_, rel) => `<style>\n${readShared(rel)}\n</style>`);
+html = html.replace(/<script src="\.\.\/shared\/([^"]+)"><\/script>/g, (_, rel) => `<script>\n${readShared(rel).replace(/<\/script/gi, '<\\/script')}\n</script>`);
 html = html.replace(/<link rel="stylesheet" href="(assets\/[^"]+)">/g, (_, rel) => `<style>\n${read(rel)}\n</style>`);
 html = html.replace(/<script src="(assets\/[^"]+)"><\/script>/g, (_, rel) => `<script>\n${read(rel).replace(/<\/script/gi, '<\\/script')}\n</script>`);
 // 파일 하나만 옮겨 다닐 때는 상대 경로의 영상 파일이 없으므로 저장소 주소로 연결

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../shared/components.css">
 <style>
 :root{
   --bg:#EDF1F4; --surface:#FFFFFF; --surface-2:#F3F6F8; --text:#12202A; --muted:#566773; --line:#D2DBE2;
@@ -16,6 +17,10 @@
   --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
   --mono:"IBM Plex Mono","D2Coding",ui-monospace,Menlo,monospace;
   color-scheme: light;
+  /* 사이트 공통 부품(퀴즈·용어집)이 쓰는 색과 글꼴 */
+  --dh-text:var(--text); --dh-muted:var(--muted); --dh-surface:var(--surface); --dh-surface-2:var(--surface-2);
+  --dh-line:var(--line); --dh-accent:var(--accent); --dh-ok:var(--good); --dh-no:#C2412D;
+  --dh-display:var(--disp); --dh-mono:var(--mono);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -179,34 +184,8 @@ pre.code .k{color:#7CC4F2} pre.code .s{color:#F5C343} pre.code .c{color:#7F95A8}
 .wbars div{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:8px}
 .wbars i{display:block;height:12px;border-radius:4px}
 .wbars span:last-child{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
-.quiz{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:12px;align-items:start}
-.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
-.q.ok{border-color:var(--good)}
-.q.no{border-color:#C2412D}
-.q .qt{margin:0 0 10px;font-weight:600}
-.q .qn{font-family:var(--mono);color:var(--accent);margin-right:8px}
-.qopts{display:grid;grid-template-columns:1fr;gap:6px}
-.qopts button{min-height:38px;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);text-align:left;cursor:pointer;line-height:1.45}
-.qopts button:hover:not(:disabled){border-color:var(--accent)}
-.qopts button:disabled{cursor:default}
-.qopts button.right{border-color:var(--good);color:var(--good);font-weight:600}
-.qopts button.wrong{border-color:#C2412D;color:#C2412D;text-decoration:line-through}
-.qcv{display:block;width:100%;height:auto;aspect-ratio:2/1;border-radius:9px;background:#0A1520;cursor:pointer;margin-bottom:8px}
-.qkeys{display:flex;flex-wrap:wrap;gap:6px}
-.qkeys button{min-width:44px;text-align:center}
-.qwhy{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
-.q.ok .qwhy b{color:var(--good)}
-.q.no .qwhy b{color:#C2412D}
-.qfoot{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
-.qfoot p{margin:0;font-weight:600}
-.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px;align-items:start}
-.gloss section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
-.gloss h3{margin:0 0 4px;font-family:var(--disp);font-size:19px;font-weight:700;color:var(--accent)}
-.gloss dl{margin:0}
-.gloss dt{margin-top:10px;font-weight:700}
-.gloss dt span{margin-left:6px;font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted)}
-.gloss dd{margin:2px 0 0;color:var(--muted);font-size:14px}
-.gloss code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:0 4px;color:var(--text)}
+/* 퀴즈 · 용어집: 사이트 공통 부품(../shared/components.css)이 그림 */
+.block .dhq-foot{margin-top:0}
 @media (max-width:900px){ .pglow{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:760px){ .ib.tb span{display:none} .ib.tb{width:36px;padding:0;justify-content:center} .pgbar .kb{display:none} }
 footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
@@ -332,8 +311,8 @@ body.export .screen{width:1920px;height:1080px;aspect-ratio:auto}
       <h2 id="quizTitle">열 문제로 확인하기</h2>
       <p>영상 순서대로 나와요. 답을 고르면 바로 해설이 보여요.</p>
     </div>
-    <ol class="quiz" id="quizList"></ol>
-    <div class="qfoot"><p id="quizScore" role="status"></p><button class="btn ghost" type="button" id="quizReset">처음부터 다시 풀기</button></div>
+    <ol id="quizList"></ol>
+    <div class="dhq-foot"><p id="quizScore" role="status"></p><button class="btn ghost" type="button" id="quizReset">처음부터 다시 풀기</button></div>
   </section>
 
   <section class="block" id="glossary" aria-labelledby="glossTitle">
@@ -342,7 +321,7 @@ body.export .screen{width:1920px;height:1080px;aspect-ratio:auto}
       <h2 id="glossTitle">한 줄로 정리한 용어와 기본값</h2>
       <p>용어 옆 회색 글씨는 영어 이름이나 BERTopic 기본값이에요. 코드에 그대로 쓰는 이름은 <code style="font-family:var(--mono)">고정폭 글꼴</code>로 적었어요.</p>
     </div>
-    <div class="gloss">
+    <div class="dh-gloss">
       <section>
         <h3>기본</h3>
         <dl>
@@ -409,6 +388,8 @@ body.export .screen{width:1920px;height:1080px;aspect-ratio:auto}
   </footer>
 </div>
 
+<script src="../shared/narration.js"></script>
+<script src="../shared/quiz.js"></script>
 <script>
 (() => {
 'use strict';
@@ -1706,13 +1687,13 @@ function syncUI() {
 }
 function play() {
   if (T >= C.end - 0.01) T = 0;
-  playing = true; started = true; bigPlay.hidden = true; waterOverride = null; hideTip(); TTS.idx = -1; syncUI(); dirty = true;
+  playing = true; started = true; bigPlay.hidden = true; waterOverride = null; hideTip(); NARR.reset(); syncUI(); dirty = true;
 }
-function pause() { playing = false; ttsStop(); syncUI(); dirty = true; }
-function seek(t, keepPlaying = true) { T = clamp(t, 0, C.end); started = true; bigPlay.hidden = true; if (!keepPlaying) playing = false; ttsStop(); pCache.t = -1; cloudCache.t = -1; syncUI(); dirty = true; }
+function pause() { playing = false; NARR.reset(); syncUI(); dirty = true; }
+function seek(t, keepPlaying = true) { T = clamp(t, 0, C.end); started = true; bigPlay.hidden = true; if (!keepPlaying) playing = false; NARR.reset(); pCache.t = -1; cloudCache.t = -1; syncUI(); dirty = true; }
 function loop(ts) {
   const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0; lastTs = ts;
-  if (playing) { T = ttsHold(T + dt * speed); if (T >= C.end) { T = C.end; playing = false; } syncUI(); ttsTick(); dirty = true; }
+  if (playing) { T = NARR.hold(T, T + dt * speed); if (T >= C.end) { T = C.end; playing = false; } syncUI(); NARR.sync(T, playing); dirty = true; }
   if (dirty) { render(started ? T : POSTER); dirty = false; }
   requestAnimationFrame(loop);
 }
@@ -1965,64 +1946,22 @@ function buildLab(ci) {
 }
 
 /* =========================================================
-   8. 음성 해설 — 브라우저에 들어 있는 음성(TTS)으로 자막 읽기
+   8. 음성 해설 — 사이트 공통 부품(../shared/narration.js)
    음성이 자막을 다 읽을 때까지 영상이 그 자막 끝에서 기다린다.
    ========================================================= */
-const TTS = { on: false, ok: !EXPORT && 'speechSynthesis' in window, busy: false, idx: -1, voice: null, u: null, since: 0, len: 0 };
-// 화면용 기호와 영문 약어를 소리 내어 읽기 좋게 바꾼다
-const TTS_READ = [
-  [/①/g, '첫째, '], [/②/g, '둘째, '], [/③/g, '셋째, '], [/④/g, '넷째, '],
-  [/c-TF-IDF/g, '씨 티에프 아이디에프'], [/\bIDF\b/g, '아이디에프'], [/\bTF\b/g, '티에프'],
-  [/KeyBERT/g, '키버트'], [/BERTopic/g, '버토픽'], [/BERT/g, '버트'], [/UMAP/g, '유맵'], [/HDBSCAN/g, '에이치디비스캔'], [/LLM/g, '엘엘엠'],
-  [/\(-1\)/g, ', 마이너스 일, '], [/[‘’“”]/g, ''], [/→/g, ', '], [/…/g, ', ']
-];
-const ttsLine = s => TTS_READ.reduce((a, [re, r]) => a.replace(re, r), s);
-function ttsVoice() {
-  if (!TTS.ok) return;
-  const vs = speechSynthesis.getVoices();
-  TTS.voice = vs.find(v => /^ko/i.test(v.lang) && /google|yuna|sun-?hi|heami|injoon|female/i.test(v.name)) || vs.find(v => /^ko/i.test(v.lang)) || null;
-}
-function ttsStop() {
-  if (TTS.ok && TTS.on) speechSynthesis.cancel();
-  TTS.busy = false; TTS.idx = -1;
-}
-function ttsSpeak(text) {
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(ttsLine(text));
-  u.lang = 'ko-KR'; if (TTS.voice) u.voice = TTS.voice;
-  u.rate = clamp(1.05 * speed, 0.6, 2);
-  u.onend = u.onerror = () => { if (TTS.u === u) TTS.busy = false; };
-  TTS.u = u; TTS.busy = true; TTS.since = performance.now(); TTS.len = text.length;
-  speechSynthesis.speak(u);
-}
-// 재생 중 다음 시각을 정할 때: 아직 읽는 중이면 지금 자막의 끝을 넘지 않는다
-function ttsHold(nt) {
-  if (!TTS.on || !TTS.busy) return nt;
-  if (performance.now() - TTS.since > (TTS.len * 0.35 + 6) * 1000) { TTS.busy = false; return nt; } // 끝났다는 신호가 오지 않을 때를 대비
-  const c = CAPTIONS[TTS.idx]; if (!c) return nt;
-  return Math.min(nt, Math.max(T, c[1] - 0.05));
-}
-function ttsTick() {
-  if (!TTS.on || !playing) return;
-  const i = CAPTIONS.findIndex(c => T >= c[0] && T < c[1]);
-  if (i >= 0 && i !== TTS.idx) { TTS.idx = i; ttsSpeak(CAPTIONS[i][2]); }
-}
-{
-  const btn = $('ttsBtn'), note = $('ttsNote');
-  if (!TTS.ok) btn.hidden = true;
-  else { ttsVoice(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', ttsVoice) : (speechSynthesis.onvoiceschanged = ttsVoice); }
-  btn.addEventListener('click', () => {
-    TTS.on = !TTS.on; btn.setAttribute('aria-pressed', String(TTS.on));
-    if (TTS.on) {
-      ttsVoice(); TTS.idx = -1;
-      note.textContent = TTS.voice
-        ? `음성 해설 켜짐 · ${TTS.voice.name}. 음성이 자막을 다 읽을 때까지 영상이 잠깐씩 기다려요.`
-        : '음성 해설 켜짐 · 이 브라우저에는 한국어 음성이 없어 기본 음성으로 읽어요. 운영체제 설정에서 한국어 음성을 추가하면 더 자연스러워요.';
-      note.hidden = false;
-      if (!started) { T = 0; play(); }
-    } else { speechSynthesis.cancel(); TTS.busy = false; TTS.idx = -1; note.hidden = true; }
-  });
-}
+const NARR = (!EXPORT && window.DH && DH.narration) ? DH.narration({
+  captions: CAPTIONS.map(([start, end, text]) => ({ start, end, text })),
+  // 영문 약어를 소리 내어 읽기 좋게 (①, →, … 같은 기호는 공통 부품이 바꿈)
+  read: [
+    [/c-TF-IDF/g, '씨 티에프 아이디에프'], [/\bIDF\b/g, '아이디에프'], [/\bTF\b/g, '티에프'],
+    [/KeyBERT/g, '키버트'], [/BERTopic/g, '버토픽'], [/BERT/g, '버트'], [/UMAP/g, '유맵'], [/HDBSCAN/g, '에이치디비스캔'], [/LLM/g, '엘엘엠'],
+    [/\(-1\)/g, ', 마이너스 일, '],
+  ],
+  rate: () => speed,
+  holdBefore: 0.05,
+}) : { supported: false, reset() {}, hold: (T, next) => next, sync() {} };
+if (NARR.supported) DH.narration.bind(NARR, $('ttsBtn'), $('ttsNote'), { onEnable() { if (!started) { T = 0; play(); } } });
+else $('ttsBtn').hidden = true;
 
 /* =========================================================
    9. 놀이터 — 점을 옮기거나 새 문장을 놓으면 HDBSCAN · c-TF-IDF를 다시 계산
@@ -2341,12 +2280,36 @@ const QZ = (() => {
   const order = [2, 0, 3, 1].map(k => cand[k]); // 보기 순서 섞기 (A~D)
   return { pts, L, cand: order, answer: order.indexOf(lone), ok: L[lone] < 0 && order.every(i => i === lone || L[i] >= 0) };
 })();
+// 공통 퀴즈 부품(../shared/quiz.js)의 그림 문제 형식: draw(g, st)는 400×200 논리 좌표로 그림
+const QZ_FIG = {
+  width: 400, height: 200,
+  label: '점 22개가 세 무리와 외딴 점으로 흩어진 지도. A부터 D까지 표시된 점 중 하나를 고르는 문제',
+  pick: (x, y) => QZ.cand.findIndex(i => Math.hypot(QZ.pts[i][0] - x, QZ.pts[i][1] - y) < 13),
+  draw(g, st) {
+    g.fillStyle = '#0A1520'; g.fillRect(0, 0, 400, 200);
+    g.fillStyle = 'rgba(140,180,210,0.08)'; for (let x = 10; x < 400; x += 20) for (let y = 10; y < 200; y += 20) g.fillRect(x - 0.5, y - 0.5, 1, 1);
+    QZ.pts.forEach((p, i) => {
+      const ci = QZ.cand.indexOf(i);
+      let col = '#DCE8F2';
+      if (st.done && QZ.L[i] >= 0) col = tc(QZ.L[i]);
+      g.beginPath(); g.arc(p[0], p[1], ci >= 0 ? 5 : 4, 0, Math.PI * 2);
+      if (st.done && QZ.L[i] < 0) { g.fillStyle = '#0E1D2C'; g.fill(); g.strokeStyle = '#9FB0C0'; g.lineWidth = 1.4; g.stroke(); }
+      else { g.fillStyle = col; g.fill(); }
+      if (ci >= 0) {
+        g.beginPath(); g.arc(p[0], p[1], 9, 0, Math.PI * 2);
+        g.strokeStyle = st.done && ci === st.answer ? '#7BE0A6' : st.done && ci === st.pick ? '#FF8E8E' : st.hover === ci ? '#7CC4F2' : 'rgba(245,195,67,0.9)';
+        g.lineWidth = 1.6; g.stroke();
+        g.font = fnt(11, 700); g.fillStyle = '#F5C343'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText('ABCD'[ci], p[0] + 11, p[1] - 9);
+      }
+    });
+  },
+};
 const QS = [
   { q: 'BERTopic이 토픽을 찾는 네 단계의 순서로 맞는 것은?', opts: ['군집화 → 임베딩 → c-TF-IDF → 차원 축소', '차원 축소 → 임베딩 → 군집화 → c-TF-IDF', '임베딩 → 차원 축소 → 군집화 → c-TF-IDF', 'c-TF-IDF → 임베딩 → 차원 축소 → 군집화'], a: 2, why: '숫자로 바꾸고(임베딩) → 펼치고(UMAP) → 무리 짓고(HDBSCAN) → 이름 붙이기(c-TF-IDF).' },
   { q: '‘강아지와 공원을 산책했다’와 ‘반려견이랑 동네 한 바퀴 돌았다’는 겹치는 단어가 없는데도 임베딩이 아주 가까워요. 왜일까요?', opts: ['두 문장의 길이가 비슷해서', '언어 모델이 뜻이 비슷하면 숫자도 비슷해지도록 문장을 요약해서', '같은 글자가 많이 들어 있어서', '우연히 그렇게 된 것'], a: 1, why: '문장 임베딩 모델은 단어가 아니라 뜻을 숫자로 요약해요. 그래서 표현이 달라도 뜻이 비슷하면 가까워져요.' },
   { q: 'UMAP이 하는 일은?', opts: ['문서를 토픽으로 나눈다', '단어가 나온 횟수를 센다', '토픽에 이름을 붙인다', '이웃 관계를 지키면서 차원을 줄인다'], a: 3, why: '말린 종이를 펴듯이, 가까웠던 점은 펼친 뒤에도 가깝게 남도록 차원을 줄여요.' },
   { q: 'BERTopic에서 UMAP의 기본 n_components(줄인 뒤의 차원 수)는?', opts: ['2', '5', '15', '384'], a: 1, why: '영상 그림은 보기 쉽게 2차원이지만 기본값은 5차원이에요. 15는 n_neighbors, 384는 임베딩의 차원이에요.' },
-  { q: '이 지도에 min_cluster_size=4로 HDBSCAN을 돌리면, A~D 중 어느 점이 이상치(-1)로 남을까요? 점을 누르거나 아래 단추를 고르세요.', canvas: true, a: QZ.answer, why: '빽빽한 섬에서 멀리 떨어진 외딴 점은 어느 군집에도 넣지 않고 -1로 남겨요. 섬 가장자리에 있어도 무리 가까이 있는 점은 그 섬에 들어가요.' },
+  { q: '이 지도에 min_cluster_size=4로 HDBSCAN을 돌리면, A~D 중 어느 점이 이상치(-1)로 남을까요? 점을 누르거나 아래 단추를 고르세요.', opts: ['A', 'B', 'C', 'D'], figure: QZ_FIG, a: QZ.answer, why: '빽빽한 섬에서 멀리 떨어진 외딴 점은 어느 군집에도 넣지 않고 -1로 남겨요. 섬 가장자리에 있어도 무리 가까이 있는 점은 그 섬에 들어가요.' },
   { q: 'HDBSCAN으로 군집을 찾을 때의 장점은?', opts: ['모든 문서가 반드시 어느 토픽엔가 들어간다', '단어 수를 대신 세어 준다', '토픽 개수를 미리 정하지 않아도 된다', '임베딩이 필요 없다'], a: 2, why: '빽빽한 곳을 스스로 찾기 때문에 토픽 개수를 정할 필요가 없어요. 대신 어디에도 속하지 않는 문서는 이상치로 남아요.' },
   { q: 'min_cluster_size를 크게 하면 보통 어떻게 될까요?', opts: ['토픽 수가 늘어난다', '이상치가 모두 사라진다', '토픽 이름만 바뀐다', '작은 섬이 토픽이 되지 못해 토픽 수가 줄어든다'], a: 3, why: '최소 크기보다 작은 무리는 토픽이 될 수 없어서, 이웃 섬에 합쳐지거나 이상치가 돼요. 놀이터에서 직접 바꿔 보세요.' },
   { q: '축구 섬에서 ‘골’은 5번, ‘오늘’은 4번 나왔어요. ‘오늘’은 모든 섬에 두루 나와요. 이름표로 더 알맞은 단어는?', opts: ['오늘: 전체에서 가장 많이 나와서', '둘 다 점수가 같다', '골: 이 섬에서 자주 나오고 다른 섬에는 드물어서 c-TF-IDF 점수가 높다', '오늘: 문장 맨 앞에 자주 나와서'], a: 2, why: 'IDF가 여러 섬에 두루 나오는 흔한 단어의 점수를 깎아요. 이 섬에서 자주, 다른 섬에서 드물게 나오는 단어가 이름표가 돼요.' },
@@ -2354,63 +2317,10 @@ const QS = [
   { q: '한국어 문서에서 토픽 이름을 깔끔하게 만드는 좋은 방법은?', opts: ['min_cluster_size를 1로 한다', '임베딩 단계를 뺀다', '문서를 모두 영어로 번역한다', '형태소 분석기로 명사만 세도록 vectorizer_model을 바꾼다'], a: 3, why: 'CountVectorizer(tokenizer=okt.nouns)처럼 명사만 세면 조사나 어미가 이름표에 끼지 않아요.' }
 ];
 if (!QZ.ok) console.warn('퀴즈 5번: HDBSCAN 결과와 정답 표시가 맞지 않아요. 점 좌표를 확인하세요.');
-const QST = QS.map(() => ({ done: false, ok: false, pick: null }));
-function qzDraw(cv, st) {
-  const g = cv.getContext('2d'), sc = cv.width / 400;
-  g.setTransform(sc, 0, 0, sc, 0, 0);
-  g.fillStyle = '#0A1520'; g.fillRect(0, 0, 400, 200);
-  g.fillStyle = 'rgba(140,180,210,0.08)'; for (let x = 10; x < 400; x += 20) for (let y = 10; y < 200; y += 20) g.fillRect(x - 0.5, y - 0.5, 1, 1);
-  QZ.pts.forEach((p, i) => {
-    const ci = QZ.cand.indexOf(i);
-    let col = '#DCE8F2';
-    if (st.done && QZ.L[i] >= 0) col = tc(QZ.L[i]);
-    g.beginPath(); g.arc(p[0], p[1], ci >= 0 ? 5 : 4, 0, Math.PI * 2);
-    if (st.done && QZ.L[i] < 0) { g.fillStyle = '#0E1D2C'; g.fill(); g.strokeStyle = '#9FB0C0'; g.lineWidth = 1.4; g.stroke(); }
-    else { g.fillStyle = col; g.fill(); }
-    if (ci >= 0) {
-      const L = 'ABCD'[ci], hov = cv._hover === ci && !st.done;
-      g.beginPath(); g.arc(p[0], p[1], 9, 0, Math.PI * 2); g.strokeStyle = st.done && ci === QZ.answer ? '#7BE0A6' : st.done && ci === st.pick ? '#FF8E8E' : hov ? '#7CC4F2' : 'rgba(245,195,67,0.9)'; g.lineWidth = 1.6; g.stroke();
-      g.font = fnt(11, 700); g.fillStyle = '#F5C343'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(L, p[0] + 11, p[1] - 9);
-    }
-  });
-}
-function qzRender() {
-  const root = $('quizList'); root.innerHTML = '';
-  QS.forEach((q, qi) => {
-    const st = QST[qi], li = document.createElement('li');
-    li.className = 'q' + (st.done ? (st.ok ? ' ok' : ' no') : '');
-    li.innerHTML = `<p class="qt"><span class="qn">Q${qi + 1}</span>${esc(q.q)}</p>`;
-    let opts = q.opts;
-    if (q.canvas) {
-      const cv = document.createElement('canvas'); cv.width = 800; cv.height = 400; cv.className = 'qcv';
-      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', '점 22개가 세 무리와 외딴 점으로 흩어진 지도. A부터 D까지 표시된 점 중 하나를 고르는 문제');
-      const pick = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 400, y = (e.clientY - r.top) / r.height * 200; return QZ.cand.findIndex(i => Math.hypot(QZ.pts[i][0] - x, QZ.pts[i][1] - y) < 13); };
-      cv.addEventListener('mousemove', e => { const k = pick(e); if (k !== cv._hover) { cv._hover = k; qzDraw(cv, st); } cv.style.cursor = k >= 0 && !st.done ? 'pointer' : 'default'; });
-      cv.addEventListener('click', e => { const k = pick(e); if (k >= 0) qzAnswer(qi, k); });
-      li.appendChild(cv); qzDraw(cv, st);
-      opts = ['A', 'B', 'C', 'D'];
-    }
-    const box = document.createElement('div'); box.className = q.canvas ? 'qopts qkeys' : 'qopts';
-    opts.forEach((o, oi) => {
-      const b = document.createElement('button'); b.type = 'button'; b.textContent = o;
-      if (st.done) { b.disabled = true; if (oi === q.a) b.classList.add('right'); else if (oi === st.pick) b.classList.add('wrong'); }
-      b.addEventListener('click', () => qzAnswer(qi, oi));
-      box.appendChild(b);
-    });
-    li.appendChild(box);
-    if (st.done) { const p = document.createElement('p'); p.className = 'qwhy'; p.innerHTML = `<b>${st.ok ? '정답!' : '아쉬워요.'}</b> ${esc(q.why)}`; li.appendChild(p); }
-    root.appendChild(li);
-  });
-  const done = QST.filter(s => s.done).length, ok = QST.filter(s => s.ok).length;
-  $('quizScore').textContent = done === QS.length
-    ? `${ok} / ${QS.length} 맞혔어요. ${ok === QS.length ? 'BERTopic의 네 단계를 모두 이해했네요!' : ok >= 7 ? '거의 다 왔어요. 틀린 문제의 해설을 읽어 보세요.' : '영상의 해당 장면을 다시 보고 도전해 보세요.'}`
-    : `${done} / ${QS.length} 문제 풀이 · ${ok}개 정답`;
-}
-function qzAnswer(qi, pick) {
-  const st = QST[qi]; if (st.done) return;
-  Object.assign(st, { done: true, pick, ok: pick === QS[qi].a }); qzRender();
-}
-$('quizReset').addEventListener('click', () => { QST.forEach(s => Object.assign(s, { done: false, ok: false, pick: null })); qzRender(); });
+if (!EXPORT) DH.quiz({
+  list: $('quizList'), score: $('quizScore'), reset: $('quizReset'), questions: QS,
+  done: (ok, total) => ok === total ? 'BERTopic의 네 단계를 모두 이해했네요!' : ok >= 7 ? '거의 다 왔어요. 틀린 문제의 해설을 읽어 보세요.' : '영상의 해당 장면을 다시 보고 도전해 보세요.',
+});
 
 /* =========================================================
    11. 시작
@@ -2422,7 +2332,6 @@ requestAnimationFrame(loop);
 if (!EXPORT) {
   new ResizeObserver(() => pgResize()).observe(pcv);
   pgResize(); pgReset(); requestAnimationFrame(pgLoop);
-  qzRender();
   if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { PG.dirty = true; });
 }
 const fontsReady = Promise.all([
@@ -2432,6 +2341,15 @@ window.BT = {
   duration: C.end, ready: fontsReady,
   renderAt(t) { started = true; pCache.t = -1; cloudCache.t = -1; render(t); },
   frame(t, q = 0.9) { this.renderAt(t); return cv.toDataURL('image/jpeg', q); }
+};
+// 사이트 공통 렌더러(../tools/render-video.cjs)가 쓰는 약속
+if (EXPORT) window.DH_EXPORT = {
+  title: 'BERTopic 토픽 지도 — 문서 더미가 토픽 지도가 되기까지',
+  duration: C.end,
+  chapters: CHAPTERS.map(ch => ({ id: ch.id, title: ch.title, start: ch.t })),
+  captions: CAPTIONS.map(([start, end, text]) => ({ start, end, text })),
+  ready: () => fontsReady,
+  frame: (t, fps, q) => window.BT.frame(t, q || 0.95),
 };
 })();
 </script>

@@ -22,6 +22,10 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --radius: 14px;
   color-scheme: light;
+  /* 사이트 공통 부품(퀴즈·용어집)이 쓰는 색과 글꼴 */
+  --dh-text: var(--ink); --dh-muted: var(--muted); --dh-surface: var(--surface); --dh-surface-2: var(--surface-2);
+  --dh-line: var(--line); --dh-accent: var(--accent); --dh-ok: var(--ok); --dh-no: var(--no);
+  --dh-display: var(--font-display); --dh-mono: var(--font-mono);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -239,35 +243,7 @@ button, select { font-family: var(--font-body); }
 .io textarea { width: 100%; font-family: var(--font-mono); font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
 .io .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; font-size: 14px; }
 
-/* ---------- 퀴즈 ---------- */
-.quiz { list-style: none; padding: 0; margin: 0; display: grid; align-items: start; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 14px; }
-.q { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; min-width: 0; }
-.q.ok { border-color: var(--ok); }
-.q.no { border-color: var(--no); }
-.q-text { margin: 0 0 12px; font-weight: 600; }
-.q-num { font-family: var(--font-mono); color: var(--accent); margin-right: 8px; }
-.q-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.q-opts button { border-radius: 10px !important; text-align: left; font-weight: 500 !important; }
-.q-opts button.right { border-color: var(--ok); color: var(--ok); }
-.q-opts button.wrong { border-color: var(--no); color: var(--no); text-decoration: line-through; }
-.q-opts button:disabled { cursor: default; }
-.q-canvas { display: block; width: 100%; height: auto; aspect-ratio: 800 / 360; border-radius: 10px; }
-.q-keys { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; font-size: 13px; color: var(--muted); }
-.q-keys button { padding: 2px 10px !important; font-family: var(--font-mono); }
-.q-why { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
-.q.ok .q-why b { color: var(--ok); }
-.q.no .q-why b { color: var(--no); }
-.quiz-foot { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-top: 16px; }
-.quiz-foot p { margin: 0; }
-
-/* ---------- 용어집 ---------- */
-.glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr)); gap: 14px; }
-.g-group { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; min-width: 0; }
-.g-group h3 { font-family: var(--font-display); font-weight: 400; font-size: 24px; margin: 0 0 6px; color: var(--accent-2); }
-.g-group dl { margin: 0; }
-.g-group dt { font-weight: 700; margin-top: 10px; }
-.g-group dt span { font-family: var(--font-mono); font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 6px; }
-.g-group dd { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+/* ---------- 퀴즈 · 용어집: 사이트 공통 부품(../shared/components.css)이 그림 ---------- */
 .more { margin-top: 24px; }
 .more h3 { font-family: var(--font-display); font-weight: 400; font-size: 24px; margin: 0 0 6px; }
 .more ul { margin: 0; padding-left: 20px; color: var(--muted); }
@@ -276,7 +252,6 @@ button, select { font-family: var(--font-body); }
 
 @media (max-width: 640px) {
   .top, main, .foot { padding-inline: 16px; }
-  .q-opts { grid-template-columns: 1fr; }
   .stats dd { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {

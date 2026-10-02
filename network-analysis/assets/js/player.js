@@ -1,4 +1,5 @@
-/* 영상 플레이어 — 타임라인, 자막, 컨트롤, 상호작용, 음성 해설, 영상 렌더링 모드 */
+/* 영상 플레이어 — 타임라인, 자막, 컨트롤, 상호작용, 음성 해설, 영상 렌더링 모드
+ * 음성 해설은 사이트 공통 부품(../shared/narration.js)을 씁니다. */
 (function () {
   'use strict';
   const NA = window.NA;
@@ -6,7 +7,8 @@
   const scenes = NA.scenes;
 
   const params = new URLSearchParams(location.search);
-  const RENDER = params.has('render');
+  // ?render(이 튜토리얼의 렌더러) 또는 #export(사이트 공통 렌더러)로 열면 영상 추출 모드
+  const RENDER = params.has('render') || location.hash === '#export';
   const FADE = 0.45;
 
   let acc = 0;
@@ -17,6 +19,13 @@
     s.state = s.init();
   });
   const TOTAL = acc;
+  // 영상 전체 기준 자막 목록 [{start, end, text}] — 음성 해설과 자막 원고(.srt)에 씀
+  const CAPS = scenes.flatMap((s) => (s.captions || []).map((c, k, arr) => ({
+    start: s.start + c[0],
+    end: s.start + (k + 1 < arr.length ? arr[k + 1][0] : s.dur - 0.2),
+    text: c[1],
+  })));
+  const NO_NARRATION = { supported: false, hold: (T, next) => next, sync() {}, reset() {} };
 
   const fmtTime = (s) => {
     s = Math.max(0, Math.floor(s));
@@ -49,7 +58,10 @@
       this.drag = null;
       this.cur = -1;
       this.listeners = [];
-      this.tts = { on: false, busy: false, key: null, voice: null };
+      // 자막이 사라지기 시작하기 전(끝 0.3초 전)에 기다리도록 holdBefore를 줌
+      this.narr = window.DH && window.DH.narration
+        ? window.DH.narration({ captions: CAPS, rate: () => this.speed, holdBefore: 0.3 })
+        : NO_NARRATION;
       this.started = false;
     }
     get total() { return TOTAL; }
@@ -73,27 +85,26 @@
       this.clearOverrides();
       this.playing = true;
       this.started = true;
-      this.ttsKey = null;
       this.emit('play');
     }
     pause() {
       if (!this.playing) return;
       this.playing = false;
-      this.stopSpeech();
+      this.narr.reset();
       this.emit('pause');
     }
     toggle() { this.playing ? this.pause() : this.play(); }
     seek(T) {
       this.T = U.clamp(T, 0, TOTAL);
       this.clearOverrides();
-      this.stopSpeech();
+      this.narr.reset();
       this.emit('seek');
     }
     seekScene(id, t = 0, play = false) {
       const s = scenes.find((x) => x.id === id);
       if (!s) return;
       this.T = s.start + t;
-      this.stopSpeech();
+      this.narr.reset();
       this.emit('seek');
       if (play) { this.playing = true; this.started = true; this.emit('play'); }
     }
@@ -106,46 +117,16 @@
       this.seek(scenes[i].start);
     }
 
-    /* ---------- 음성 해설 (브라우저 내장 TTS) ---------- */
-    stopSpeech() {
-      if (this.tts.on && window.speechSynthesis) window.speechSynthesis.cancel();
-      this.tts.busy = false;
-      this.tts.key = null;
-    }
-    speak(text) {
-      const synth = window.speechSynthesis;
-      if (!synth) return;
-      synth.cancel();
-      const u = new SpeechSynthesisUtterance(strip(text).replace(/·/g, ', ').replace(/×/g, ' 곱하기 ').replace(/÷/g, ' 나누기 '));
-      u.lang = 'ko-KR';
-      if (this.tts.voice) u.voice = this.tts.voice;
-      u.rate = 1.08 * Math.min(1.4, this.speed);
-      this.tts.busy = true;
-      u.onend = u.onerror = () => { this.tts.busy = false; };
-      synth.speak(u);
-    }
-
     /* ---------- 매 프레임 ---------- */
     tick(dt) {
       if (this.playing) {
-        let next = this.T + dt * this.speed;
-        const sc = this.sceneAt(this.T);
-        const cap = captionAt(sc, this.T - sc.start);
         // 음성이 아직 읽는 중이면 다음 자막으로 넘어가지 않고 기다림
-        if (this.tts.on && this.tts.busy && cap) {
-          const limit = sc.start + cap.end - 0.3;
-          if (next > limit) next = Math.max(this.T, limit);
-        }
-        this.T = next;
+        this.T = this.narr.hold(this.T, this.T + dt * this.speed);
         if (this.T >= TOTAL) { this.T = TOTAL; this.playing = false; this.emit('pause'); }
       }
       const sc = this.sceneAt(this.T);
       if (sc.index !== this.cur) { this.cur = sc.index; this.emit('scene'); }
-      if (this.tts.on && this.playing) {
-        const cap = captionAt(sc, this.T - sc.start);
-        const key = cap ? sc.index + ':' + cap.k : null;
-        if (key && key !== this.tts.key) { this.tts.key = key; this.speak(cap.text); }
-      }
+      this.narr.sync(this.T, this.playing);
       this.draw(this.T, dt);
     }
 
@@ -238,7 +219,7 @@
           this.toggle();
           return;
         } else if (sc.click) changed = sc.click(sc.state, d.hit, this);
-        if (changed) { this.playing = false; this.stopSpeech(); this.emit('pause'); }
+        if (changed) { this.playing = false; this.narr.reset(); this.emit('pause'); }
       };
       cv.addEventListener('pointerup', up);
       cv.addEventListener('pointercancel', () => { this.drag = null; });
@@ -292,17 +273,22 @@
     window.__NA_RENDER = {
       total: TOTAL,
       chapters: scenes.map((s) => ({ id: s.id, title: s.chapter, start: s.start })),
-      captions: scenes.flatMap((s) => (s.captions || []).map((c, k, arr) => ({
-        start: s.start + c[0],
-        end: s.start + (k + 1 < arr.length ? arr[k + 1][0] : s.dur - 0.2),
-        text: c[1],
-      }))),
+      captions: CAPS,
       async ready() {
         await loadFonts(collectTexts());
         scenes.forEach((s) => (s.state = s.init()));
         return true;
       },
       draw(T, fps) { player.draw(T, 1 / (fps || 30), { render: true }); return true; },
+    };
+    // 사이트 공통 렌더러(tools/render-video.cjs)가 쓰는 약속
+    window.DH_EXPORT = {
+      title: '점과 선의 과학 — 네트워크 분석 입문',
+      duration: TOTAL,
+      chapters: window.__NA_RENDER.chapters,
+      captions: CAPS,
+      ready: () => window.__NA_RENDER.ready(),
+      frame(T, fps, q) { player.draw(T, 1 / (fps || 30), { render: true }); return cv.toDataURL('image/jpeg', q || 0.95); },
     };
     return;
   }
@@ -394,23 +380,9 @@
   };
   $('#speed').onchange = (e) => { player.speed = +e.target.value; };
 
-  // 음성 해설
-  const ttsBtn = $('#btn-tts');
-  if (!('speechSynthesis' in window)) ttsBtn.hidden = true;
-  const pickVoice = () => {
-    const vs = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-    player.tts.voice = vs.find((v) => /^ko/i.test(v.lang) && /google|yuna|sun-hi|heami|female/i.test(v.name)) || vs.find((v) => /^ko/i.test(v.lang)) || null;
-  };
-  if (window.speechSynthesis) { pickVoice(); window.speechSynthesis.onvoiceschanged = pickVoice; }
-  ttsBtn.onclick = () => {
-    pickVoice();
-    player.tts.on = !player.tts.on;
-    ttsBtn.setAttribute('aria-pressed', player.tts.on);
-    if (!player.tts.on) { window.speechSynthesis.cancel(); player.tts.busy = false; }
-    player.tts.key = null;
-    const note = $('#tts-note');
-    note.hidden = !(player.tts.on && !player.tts.voice);
-  };
+  // 음성 해설 (사이트 공통 부품)
+  if (window.DH && window.DH.narration) DH.narration.bind(player.narr, $('#btn-tts'), $('#tts-note'));
+  else $('#btn-tts').hidden = true;
 
   // 전체 화면
   const stageWrap = $('#player');
@@ -427,7 +399,7 @@
     const f = U.clamp((e.clientX - r.left) / r.width);
     posterMode = false; poster.hidden = true;
     player.T = f * TOTAL;
-    player.stopSpeech();
+    player.narr.reset();
   };
   track.addEventListener('pointerdown', (e) => { scrubbing = true; player.clearOverrides(); track.setPointerCapture(e.pointerId); scrubTo(e); });
   track.addEventListener('pointermove', (e) => {
@@ -449,6 +421,7 @@
     const tag = (e.target.tagName || '').toLowerCase();
     if (['input', 'select', 'textarea'].includes(tag)) return;
     if (tag === 'button' && (e.key === ' ' || e.key === 'Enter')) return;
+    if (e.target.closest && e.target.closest('#playground, #quiz, #glossary')) return; // 놀이터·퀴즈에서 누른 키는 영상을 건드리지 않음
     if (e.target === track && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) return;
     const inView = stageWrap.getBoundingClientRect().bottom > 0 && stageWrap.getBoundingClientRect().top < innerHeight;
     if (!inView) return;
@@ -457,6 +430,7 @@
     else if (e.key === 'ArrowLeft') { e.preventDefault(); e.shiftKey ? player.chapterJump(-1) : player.seek(player.T - 5); }
     else if (e.key === 'c') ccBtn.click();
     else if (e.key === 'f') $('#btn-full').click();
+    else if (e.key === 'v' && !$('#btn-tts').hidden) $('#btn-tts').click();
   });
 
   // 처음 장면 설정
