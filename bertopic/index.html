@@ -1686,10 +1686,17 @@ const POSTER = 6.2;
 const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>';
 const ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg>';
+let lastBtn = '';
 function syncUI() {
   const ended = T >= C.end - 0.01;
-  playBtn.innerHTML = playing ? ICON_PAUSE : ended ? ICON_REPLAY : ICON_PLAY;
-  playBtn.setAttribute('aria-label', playing ? '일시정지 (스페이스)' : ended ? '다시 보기' : '재생 (스페이스)');
+  // 단추 아이콘은 상태가 바뀔 때만 다시 그린다. 재생 중 매 프레임 바꾸면
+  // 누르는 사이에 아이콘이 교체되어 브라우저가 클릭을 버린다(일시정지가 안 먹던 원인).
+  const btn = playing ? 'pause' : ended ? 'replay' : 'play';
+  if (btn !== lastBtn) {
+    lastBtn = btn;
+    playBtn.innerHTML = btn === 'pause' ? ICON_PAUSE : btn === 'replay' ? ICON_REPLAY : ICON_PLAY;
+    playBtn.setAttribute('aria-label', btn === 'pause' ? '일시정지 (스페이스)' : btn === 'replay' ? '다시 보기' : '재생 (스페이스)');
+  }
   seekEl.value = T; seekEl.style.setProperty('--p', (T / C.end * 100) + '%');
   timeLbl.textContent = `${fmtT(T)} / ${fmtT(C.end)}`;
   const cap = started ? captionAt(T) : null;
