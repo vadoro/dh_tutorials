@@ -1,5 +1,7 @@
 # 점과 선의 과학 — 네트워크 분석 입문 인터랙티브 영상
 
+> [DH 튜토리얼](../README.md) 모음의 한 꼭지입니다. 원래 `vadoro/network_tutorial` 저장소에 있던 것을 커밋 기록과 함께 옮겼어요.
+
 네트워크 분석에 꼭 필요한 개념과 원리를 **약 7분짜리 모션그래픽 영상**으로 쉽게 설명합니다.
 영상은 브라우저에서 실시간으로 그려지기 때문에, 아무 때나 멈추고 화면 속 네트워크를 **직접 만져 볼 수 있습니다**.
 
@@ -11,7 +13,7 @@
 | --- | --- |
 | **`index.html` 더블클릭** | 저장소를 내려받아 `index.html`을 열면 끝. 설치도, 서버도 필요 없습니다. 인터넷이 없으면 글꼴만 기본 한글 글꼴로 바뀌어요. |
 | **MP4 영상** | [`video/network-analysis.mp4`](video/network-analysis.mp4) — 1080p, 자막 포함, 장(chapter) 표시. 수업 자료나 유튜브용. 자막 원고는 [`video/network-analysis.srt`](video/network-analysis.srt). |
-| **웹 주소로 공유** | 저장소 **Settings → Pages**에서 *Branch: `main` / `(root)`* 를 고르고 저장하면 `https://vadoro.github.io/network_tutorial/` 에서 열립니다. |
+| **웹 주소로 공유** | [DH 튜토리얼](../README.md) 사이트의 한 꼭지로 `https://vadoro.github.io/dh_tutorials/network-analysis/` 에서 열립니다 (저장소에서 GitHub Pages를 켠 뒤). |
 | **파일 하나로 공유** | `node tools/build-standalone.cjs` → `dist/network-analysis.html` 한 파일에 모든 것이 들어갑니다. 메일·메신저로 보내기 좋아요. |
 
 ## 무엇을 배우나요
