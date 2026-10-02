@@ -1,0 +1,2430 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BERTopic 토픽 지도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#EDF1F4; --surface:#FFFFFF; --surface-2:#F3F6F8; --text:#12202A; --muted:#566773; --line:#D2DBE2;
+  --accent:#1B6AAB; --accent-soft:#DDEBF6; --good:#1E8A5A;
+  --screen:#0B1622; --screen-2:#0E1D2C; --screen-text:#E8F0F6; --screen-muted:#8EA3B5; --screen-line:#1C3044; --screen-accent:#7CC4F2;
+  --disp:"Hahmlet","Noto Serif KR","Nanum Myeongjo",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  --mono:"IBM Plex Mono","D2Coding",ui-monospace,Menlo,monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#071019; --surface:#0E1822; --surface-2:#122030; --text:#E3EBF1; --muted:#8FA2B2; --line:#1F2F3D;
+    --accent:#7CC4F2; --accent-soft:#12304A; --good:#6FD6A0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#071019; --surface:#0E1822; --surface-2:#122030; --text:#E3EBF1; --muted:#8FA2B2; --line:#1F2F3D;
+  --accent:#7CC4F2; --accent-soft:#12304A; --good:#6FD6A0;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--text)}
+body{margin:0;font-family:var(--body);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.page{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:flex;flex-direction:column;gap:22px}
+.masthead{display:flex;flex-direction:column;gap:8px}
+.eyebrow{margin:0;font-size:12.5px;font-weight:600;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+h1{margin:0;font-family:var(--disp);font-weight:800;font-size:clamp(27px,4.2vw,44px);line-height:1.18;letter-spacing:-.01em;text-wrap:balance}
+h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--accent-soft) 62%)}
+.jump{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.jump a{padding:4px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--text);font-size:13.5px;font-weight:600;text-decoration:none}
+.jump a:hover{border-color:var(--accent);color:var(--accent)}
+.lead{margin:0;max-width:62ch;color:var(--muted);font-size:16px}
+
+/* ---------- player (의도적으로 늘 어두운 화면) ---------- */
+.player{background:var(--screen);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 22px 50px -28px rgba(6,16,26,.6)}
+.screen{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;background:#0A1520}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+#tip,.pgtip{position:absolute;left:0;top:0;max-width:260px;padding:9px 11px;border-radius:9px;background:rgba(7,15,23,.94);border:1px solid var(--screen-line);color:var(--screen-text);font-size:13px;line-height:1.5;pointer-events:none;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+#tip .tk,.pgtip .tk{display:inline-block;margin:4px 4px 0 0;padding:0 6px;border-radius:5px;background:#1A3148;color:#BFD8EA;font-size:11.5px}
+#tip .tp,.pgtip .tp{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--screen-muted)}
+#tip .dot,.pgtip .dot{width:9px;height:9px;border-radius:50%}
+#bigPlay{position:absolute;left:50%;top:77%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;padding:14px 22px 14px 18px;border:1px solid rgba(124,196,242,.55);border-radius:999px;background:rgba(8,18,28,.82);color:var(--screen-text);font-weight:600;font-size:17px;cursor:pointer;backdrop-filter:blur(4px)}
+#bigPlay:hover{background:rgba(18,40,60,.92)}
+#bigPlay svg{width:22px;height:22px}
+.cap{min-height:3.7em;padding:10px 20px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--screen-text);font-size:clamp(14px,1.85vw,19px);font-weight:500;line-height:1.5;border-top:1px solid var(--screen-line);text-wrap:balance}
+.cap span{transition:opacity .25s ease}
+.cap.off span{opacity:0}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--screen-2);color:var(--screen-text)}
+.ib{display:inline-grid;place-items:center;width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:var(--screen-text);cursor:pointer;flex:none}
+.ib:hover{background:rgba(124,196,242,.12)}
+.ib svg{width:20px;height:20px}
+.ib[aria-pressed="false"]{opacity:.5}
+.ib.tb{width:auto;gap:6px;padding:0 10px 0 8px;font-size:13px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center}
+.ttsnote{margin:0;padding:6px 14px 8px;background:var(--screen-2);color:var(--screen-muted);font-size:12.5px;border-top:1px solid var(--screen-line)}
+.time{font-family:var(--mono);font-size:12.5px;color:var(--screen-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.scrub{position:relative;flex:1;min-width:60px;height:36px;display:flex;align-items:center}
+.ticks{position:absolute;left:8px;right:8px;top:50%;height:0;pointer-events:none}
+.ticks i{position:absolute;top:-6px;width:2px;height:12px;border-radius:1px;background:var(--screen);opacity:.9}
+#seek{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:transparent;margin:0;cursor:pointer}
+#seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--screen-accent) var(--p,0%),#243B51 var(--p,0%))}
+#seek::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--screen-accent) var(--p,0%),#243B51 var(--p,0%))}
+#seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-5px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 3px rgba(124,196,242,.35)}
+#seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
+#speed{height:32px;padding:0 6px;border-radius:7px;border:1px solid var(--screen-line);background:var(--screen);color:var(--screen-text);font-size:13px}
+.player:fullscreen{display:flex;flex-direction:column;justify-content:center;border-radius:0;border:0}
+.player:fullscreen .screen{width:min(100%,calc((100vh - 130px) * 16 / 9));margin:0 auto}
+
+/* ---------- 아래: 장면 목록 + 실습 ---------- */
+.below{display:grid;grid-template-columns:250px minmax(0,1fr);gap:22px;align-items:start}
+.chapters{display:flex;flex-direction:column;gap:2px}
+.chapters h2,.lab h2{margin:0 0 8px;font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.chap{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:9px;background:transparent;text-align:left;cursor:pointer}
+.chap:hover{background:var(--surface-2)}
+.chap .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);font-size:12px;font-weight:600;color:var(--muted)}
+.chap .tt{font-weight:600;font-size:14.5px;line-height:1.3}
+.chap .tt small{display:block;font-weight:400;font-size:12.5px;color:var(--muted)}
+.chap .tm{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.chap[aria-current="true"]{background:var(--accent-soft)}
+.chap[aria-current="true"] .n{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.lab{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px 20px;min-height:280px}
+.lab h3{margin:0 0 6px;font-family:var(--disp);font-size:21px;font-weight:700;line-height:1.3}
+.lab p{margin:0 0 12px;max-width:66ch}
+.lab .note{font-size:13px;color:var(--muted)}
+.lab .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:10px 0}
+.lab label{font-size:14px;font-weight:600}
+.lab input[type=range]{flex:1;min-width:160px;accent-color:var(--accent)}
+.lab select,.lab input[type=text]{height:38px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);min-width:0;max-width:100%}
+.lab input[type=text]{flex:1;min-width:180px}
+.btn{height:38px;padding:0 14px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:var(--surface);font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.chipbtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-size:13px;cursor:pointer}
+.chipbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background:var(--accent-soft)}
+.sw{width:10px;height:10px;border-radius:50%;flex:none}
+.stat{display:flex;flex-wrap:wrap;gap:8px}
+.stat b{display:inline-flex;align-items:baseline;gap:4px;padding:6px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);font-weight:600}
+.stat b span{font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums}
+.val{font-family:var(--mono);font-weight:500;min-width:2.2em;text-align:right;font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;max-width:420px;margin:6px 0 2px}
+.strip i{aspect-ratio:3/4;border-radius:3px}
+.cmp{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.cmp .doc{font-weight:600}
+.meter{height:10px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden;max-width:420px}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:5px;transition:width .3s ease}
+.doclist{list-style:none;margin:8px 0 0;padding:0;max-height:250px;overflow:auto;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);columns:2 240px;column-gap:18px;padding:10px 12px;font-size:13.5px}
+.doclist li{break-inside:avoid;padding:2px 0}
+.doclist li span{font-family:var(--mono);font-size:11px;color:var(--muted);margin-right:6px}
+.tbl{width:100%;border-collapse:collapse;font-size:13.5px;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl th:nth-child(2),.tbl td:nth-child(2){text-align:left}
+.tbl th{font-size:12px;font-weight:600;color:var(--muted)}
+.tbl tr.common td{color:var(--muted)}
+.tblwrap{overflow-x:auto}
+pre.code{position:relative;margin:10px 0 0;padding:14px 16px;border-radius:10px;background:#0B1622;color:#DCE7F0;font-family:var(--mono);font-size:13px;line-height:1.6;overflow-x:auto}
+pre.code .k{color:#7CC4F2} pre.code .s{color:#F5C343} pre.code .c{color:#7F95A8}
+.copy{position:absolute;right:8px;top:8px;height:28px;padding:0 10px;border:1px solid #2A4259;border-radius:6px;background:#12263A;color:#DCE7F0;font-size:12px;cursor:pointer}
+.result{margin-top:10px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2)}
+.result strong{font-size:16px}
+.samples{display:flex;flex-wrap:wrap;gap:6px}
+.toplist{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:13.5px}
+.toplist div{display:flex;align-items:center;gap:8px}
+.toplist code{font-family:var(--mono);font-size:12.5px}
+.chk{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.hint{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--muted);margin-top:12px}
+/* ---------- 놀이터 · 퀴즈 · 용어집 ---------- */
+.block{display:flex;flex-direction:column;gap:14px;padding-top:26px;border-top:1px solid var(--line);scroll-margin-top:12px}
+.bhead{display:flex;flex-direction:column;gap:6px}
+.bhead h2{margin:0;font-family:var(--disp);font-weight:800;font-size:clamp(23px,3vw,31px);line-height:1.25;text-wrap:balance}
+.bhead p{margin:0;max-width:68ch;color:var(--muted)}
+.pg{display:flex;flex-direction:column;gap:14px}
+.pgmap{background:var(--screen);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pgscreen{position:relative;width:100%;aspect-ratio:16/9;background:#0A1520}
+#pgCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:default}
+.pgmode{position:absolute;left:50%;top:12px;transform:translateX(-50%);margin:0;padding:6px 14px;border-radius:999px;background:rgba(245,195,67,.95);color:#1B1405;font-size:13px;font-weight:700;pointer-events:none;white-space:nowrap}
+.pgbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:9px 14px;background:var(--screen-2);color:var(--screen-text);font-size:13px}
+.pgbar b{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;color:var(--screen-accent)}
+.pgbar .sp{flex:1}
+.pgbar .kb{color:var(--screen-muted)}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start}
+.ctl fieldset{margin:0;padding:12px 14px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-width:0}
+.ctl legend{padding:0 6px;font-size:12.5px;font-weight:600;letter-spacing:.06em;color:var(--muted)}
+.ctl .row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:6px 0}
+.ctl label{font-size:13.5px;font-weight:600}
+.ctl .mono{font-family:var(--mono);font-size:12.5px}
+.ctl input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.ctl select,.ctl input[type=text]{height:36px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);min-width:0;max-width:100%}
+.ctl input[type=text]{flex:1;min-width:0;width:100%}
+.ctl .note{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.tokchips{display:flex;flex-wrap:wrap;gap:5px;min-height:32px;margin:8px 0}
+.tokchips .chipbtn{height:28px;font-size:12.5px}
+.tokchips .chipbtn[aria-pressed="false"]{opacity:.6;text-decoration:line-through}
+.pglow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h3{margin:0 0 8px;font-size:15px;font-weight:700}
+.card h3 code{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--muted)}
+.tinfo td:nth-child(3),.tinfo th:nth-child(3),.tinfo td:nth-child(4),.tinfo th:nth-child(4){text-align:left}
+.tinfo td{white-space:normal}
+.tinfo th:first-child,.tinfo td:first-child{text-align:left}
+.tinfo th:nth-child(2),.tinfo td:nth-child(2){text-align:right}
+.tinfo tr.on td{background:var(--accent-soft)}
+.tinfo .pick{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:0;font-family:var(--mono);font-weight:600;cursor:pointer;color:var(--text)}
+.tinfo .reps{font-size:12.5px;color:var(--muted)}
+.wbars{display:flex;flex-direction:column;gap:5px;font-size:13.5px}
+.wbars div{display:grid;grid-template-columns:5.5em minmax(0,1fr) 3.4em;align-items:center;gap:8px}
+.wbars i{display:block;height:12px;border-radius:4px}
+.wbars span:last-child{font-family:var(--mono);font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.quiz{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:12px;align-items:start}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.q.ok{border-color:var(--good)}
+.q.no{border-color:#C2412D}
+.q .qt{margin:0 0 10px;font-weight:600}
+.q .qn{font-family:var(--mono);color:var(--accent);margin-right:8px}
+.qopts{display:grid;grid-template-columns:1fr;gap:6px}
+.qopts button{min-height:38px;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);text-align:left;cursor:pointer;line-height:1.45}
+.qopts button:hover:not(:disabled){border-color:var(--accent)}
+.qopts button:disabled{cursor:default}
+.qopts button.right{border-color:var(--good);color:var(--good);font-weight:600}
+.qopts button.wrong{border-color:#C2412D;color:#C2412D;text-decoration:line-through}
+.qcv{display:block;width:100%;height:auto;aspect-ratio:2/1;border-radius:9px;background:#0A1520;cursor:pointer;margin-bottom:8px}
+.qkeys{display:flex;flex-wrap:wrap;gap:6px}
+.qkeys button{min-width:44px;text-align:center}
+.qwhy{margin:10px 0 0;font-size:13.5px;color:var(--muted)}
+.q.ok .qwhy b{color:var(--good)}
+.q.no .qwhy b{color:#C2412D}
+.qfoot{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.qfoot p{margin:0;font-weight:600}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px;align-items:start}
+.gloss section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.gloss h3{margin:0 0 4px;font-family:var(--disp);font-size:19px;font-weight:700;color:var(--accent)}
+.gloss dl{margin:0}
+.gloss dt{margin-top:10px;font-weight:700}
+.gloss dt span{margin-left:6px;font-family:var(--mono);font-size:12px;font-weight:400;color:var(--muted)}
+.gloss dd{margin:2px 0 0;color:var(--muted);font-size:14px}
+.gloss code{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:0 4px;color:var(--text)}
+@media (max-width:900px){ .pglow{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:760px){ .ib.tb span{display:none} .ib.tb{width:36px;padding:0;justify-content:center} .pgbar .kb{display:none} }
+footer{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;display:flex;flex-direction:column;gap:4px}
+footer p{margin:0;max-width:80ch}
+
+@media (max-width:760px){
+  .below{grid-template-columns:minmax(0,1fr)}
+  .chapters{flex-direction:row;flex-wrap:wrap;gap:6px}
+  .chapters h2{width:100%}
+  .chap{width:auto;grid-template-columns:auto auto;padding:6px 10px;border:1px solid var(--line)}
+  .chap .tt small,.chap .tm{display:none}
+  .bar{gap:4px;padding:6px 8px}
+  .time{font-size:11px}
+  #speed{display:none}
+}
+@media (prefers-reduced-motion: reduce){ .cap span,.meter i{transition:none} }
+
+/* 영상 추출용 */
+body.export{background:#0A1520;overflow:hidden}
+body.export .page{padding:0;max-width:none;gap:0}
+body.export .page > :not(.player){display:none}
+body.export .player{border:0;border-radius:0;box-shadow:none}
+body.export .cap,body.export .bar,body.export #bigPlay,body.export #tip{display:none!important}
+body.export .screen{width:1920px;height:1080px;aspect-ratio:auto}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">인터랙티브 모션그래픽 · 3분 46초</p>
+    <h1>문서 더미가 <em>토픽 지도</em>가 되기까지</h1>
+    <p class="lead">BERTopic은 글을 숫자로 바꾸고, 지도로 펼치고, 빽빽한 섬을 찾고, 섬마다 이름을 붙여요. 짧은 문장 90개로 그 과정을 한 장면씩 따라가 봅니다. 멈추고, 되감고, 직접 값을 바꿔 보세요.</p>
+    <nav class="jump" aria-label="페이지 안 이동"><a href="#player">영상</a><a href="#playground">놀이터</a><a href="#quiz">퀴즈</a><a href="#glossary">용어집</a></nav>
+  </header>
+
+  <section class="player" id="player" aria-label="BERTopic 설명 영상">
+    <div class="screen" id="screen">
+      <canvas id="stage" role="img" aria-label="BERTopic 과정을 보여 주는 애니메이션. 아래 자막이 내용을 설명합니다."></canvas>
+      <div id="tip" hidden></div>
+      <button id="bigPlay" type="button"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>영상 재생</button>
+    </div>
+    <div class="cap" id="cap" aria-live="polite"><span id="capText">여기 글이 잔뜩 있어요. 이 글들이 무슨 이야기를 하는지 한눈에 알 수 있을까요?</span></div>
+    <div class="bar">
+      <button class="ib" id="playBtn" type="button" aria-label="재생 (스페이스)" title="재생 / 일시정지 (스페이스)"></button>
+      <span class="time" id="timeLbl">0:00 / 3:46</span>
+      <div class="scrub"><div class="ticks" id="ticks"></div><input id="seek" type="range" min="0" max="226" step="0.05" value="0" aria-label="재생 위치"></div>
+      <select id="speed" aria-label="재생 속도">
+        <option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option>
+      </select>
+      <button class="ib" id="ccBtn" type="button" aria-pressed="true" aria-label="자막 켜기/끄기" title="자막 (C)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M10.5 10.3a2.2 2.2 0 1 0 0 3.4M17 10.3a2.2 2.2 0 1 0 0 3.4"/></svg></button>
+      <button class="ib tb" id="ttsBtn" type="button" aria-pressed="false" title="음성 해설: 브라우저 음성으로 자막 읽기 (V)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>음성 해설</span></button>
+      <button class="ib" id="fsBtn" type="button" aria-label="전체 화면" title="전체 화면 (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    </div>
+    <p class="ttsnote" id="ttsNote" hidden></p>
+  </section>
+
+  <section class="below">
+    <nav class="chapters" id="chapters" aria-label="장면 목록"><h2>장면</h2></nav>
+    <aside class="lab" aria-labelledby="labTitle">
+      <h2 id="labTitle">직접 해 보기</h2>
+      <div id="labBody"></div>
+    </aside>
+  </section>
+
+  <section class="block" id="playground" aria-labelledby="pgTitle">
+    <div class="bhead">
+      <p class="eyebrow">놀이터</p>
+      <h2 id="pgTitle">내 손으로 만드는 토픽 지도</h2>
+      <p>영상 속 문서 90개가 지도 위에 있어요. 점을 끌어 옮기거나 새 문장을 지도에 놓으면 HDBSCAN과 c-TF-IDF가 그 자리에서 다시 계산돼요. 문장이 들어갈 자리를 정하는 건 원래 임베딩 모델의 일인데, 여기서는 여러분이 그 역할을 맡아요.</p>
+    </div>
+    <div class="pg">
+      <div class="pgmap">
+        <div class="pgscreen">
+          <canvas id="pgCanvas" tabindex="0" aria-label="문서 점이 놓인 토픽 지도. 아래 표에 같은 결과가 글로 나옵니다."></canvas>
+          <div class="pgtip" id="pgTip" hidden></div>
+          <p class="pgmode" id="pgMode" hidden>지도에서 이 문장이 들어갈 곳을 누르세요 (Esc: 취소)</p>
+        </div>
+        <div class="pgbar" id="pgStat" aria-live="polite"></div>
+      </div>
+      <div class="ctl">
+        <fieldset>
+          <legend>③ 군집화 · HDBSCAN</legend>
+          <div class="row"><label for="pgMcs">min_cluster_size</label><input id="pgMcs" type="range" min="2" max="20" value="10"><span class="val" id="pgMcsV">10</span></div>
+          <div class="row"><label for="pgMs">min_samples</label><input id="pgMs" type="range" min="1" max="20" value="10" disabled><span class="val" id="pgMsV">10</span></div>
+          <div class="row"><label class="chk"><input id="pgMsAuto" type="checkbox" checked> min_cluster_size와 같게 (기본값)</label></div>
+          <p class="note">min_samples를 키우면 더 보수적으로 묶어서 이상치가 늘어요.</p>
+        </fieldset>
+        <fieldset>
+          <legend>토픽 다듬기</legend>
+          <div class="row"><label for="pgNr">nr_topics</label><select id="pgNr"><option value="0">그대로 (None)</option><option value="2">2개로 합치기</option><option value="3">3개로 합치기</option><option value="4">4개로 합치기</option><option value="5">5개로 합치기</option><option value="6">6개로 합치기</option></select></div>
+          <div class="row"><label class="chk"><input id="pgRed" type="checkbox"> 이상치를 가까운 토픽에 넣기</label></div>
+          <p class="note"><code class="mono">reduce_outliers</code>를 흉내 냈어요. 지도에서 가장 가까운 토픽 중심으로 보냅니다.</p>
+        </fieldset>
+        <fieldset>
+          <legend>새 문장 놓기</legend>
+          <div class="row"><input id="pgText" type="text" placeholder="예: 손흥민이 두 골을 넣었다" autocomplete="off" aria-label="지도에 놓을 새 문장"></div>
+          <div class="tokchips" id="pgToks" aria-label="토크나이저가 뽑은 단어 (눌러서 빼거나 넣기)"></div>
+          <div class="row"><button class="btn" type="button" id="pgPlace">지도에 놓기</button><button class="btn ghost" type="button" id="pgReset">처음 상태로</button></div>
+          <div class="samples" id="pgSamples"></div>
+          <p class="note">위 칩은 토크나이저가 뽑은 단어예요. 잘못 뽑혔으면 눌러서 빼거나 넣으세요. 점은 끌어서 옮기고, 두 번 누르면 지도에서 빠져요.</p>
+        </fieldset>
+      </div>
+    </div>
+    <div class="pglow">
+      <div class="card">
+        <h3>토픽 목록 <code>topic_model.get_topic_info()</code></h3>
+        <div class="tblwrap" id="pgInfo"></div>
+      </div>
+      <div class="card">
+        <h3 id="pgWordsTitle">토픽 단어 점수 <code>get_topic(0)</code></h3>
+        <div class="wbars" id="pgWords"></div>
+        <h3 style="margin-top:14px">지금 설정을 파이썬으로</h3>
+        <div id="pgCode"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="quiz" aria-labelledby="quizTitle">
+    <div class="bhead">
+      <p class="eyebrow">퀴즈</p>
+      <h2 id="quizTitle">열 문제로 확인하기</h2>
+      <p>영상 순서대로 나와요. 답을 고르면 바로 해설이 보여요.</p>
+    </div>
+    <ol class="quiz" id="quizList"></ol>
+    <div class="qfoot"><p id="quizScore" role="status"></p><button class="btn ghost" type="button" id="quizReset">처음부터 다시 풀기</button></div>
+  </section>
+
+  <section class="block" id="glossary" aria-labelledby="glossTitle">
+    <div class="bhead">
+      <p class="eyebrow">용어집</p>
+      <h2 id="glossTitle">한 줄로 정리한 용어와 기본값</h2>
+      <p>용어 옆 회색 글씨는 영어 이름이나 BERTopic 기본값이에요. 코드에 그대로 쓰는 이름은 <code style="font-family:var(--mono)">고정폭 글꼴</code>로 적었어요.</p>
+    </div>
+    <div class="gloss">
+      <section>
+        <h3>기본</h3>
+        <dl>
+          <dt>토픽 모델링 <span>topic modeling</span></dt><dd>많은 문서를 읽지 않고도 어떤 주제(토픽)들이 있는지 자동으로 찾아내는 방법.</dd>
+          <dt>BERTopic</dt><dd>문장 임베딩 → 차원 축소 → 군집화 → c-TF-IDF의 네 단계로 토픽을 찾는 파이썬 라이브러리. 각 단계를 다른 모델로 바꿔 끼울 수 있어요.</dd>
+          <dt>토픽 <span>topic</span></dt><dd>뜻이 비슷한 문서들의 무리. 번호(0, 1, 2…)와 대표 단어로 된 이름이 붙어요. 0번이 가장 큰 토픽이에요.</dd>
+          <dt>이상치 <span>outlier · -1</span></dt><dd>어느 토픽에도 속하지 않는 문서. 억지로 끼워 넣지 않고 토픽 <code>-1</code>로 따로 모아 둬요.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>① 임베딩</h3>
+        <dl>
+          <dt>임베딩 <span>embedding</span></dt><dd>문장의 뜻을 숫자 목록(벡터)으로 바꾼 것. 뜻이 비슷하면 숫자도 비슷해요.</dd>
+          <dt>문장 임베딩 모델 <span>SBERT</span></dt><dd>문장을 통째로 읽고 벡터를 만드는 언어 모델. 기본값은 영어 <code>all-MiniLM-L6-v2</code>, 다국어는 <code>paraphrase-multilingual-MiniLM-L12-v2</code>(둘 다 384차원).</dd>
+          <dt>코사인 유사도 <span>cosine similarity</span></dt><dd>두 벡터가 가리키는 방향이 얼마나 같은지. 1에 가까울수록 뜻이 비슷해요.</dd>
+          <dt>차원 <span>dimension</span></dt><dd>벡터를 이루는 숫자의 개수. 문장 하나가 384차원 공간의 점 하나가 돼요.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>② 차원 축소</h3>
+        <dl>
+          <dt>UMAP</dt><dd>누가 누구의 이웃인지 기억한 채 고차원 공간을 납작하게 펼치는 방법. 가까운 점은 펼친 뒤에도 가까워요.</dd>
+          <dt><code>n_neighbors</code> <span>15</span></dt><dd>이웃을 몇 개까지 기억할지. 키우면 큰 그림을, 줄이면 작은 무리를 더 살려요.</dd>
+          <dt><code>n_components</code> <span>5</span></dt><dd>몇 차원으로 줄일지. 그림은 2차원으로 그렸지만 기본값은 5차원이에요.</dd>
+          <dt><code>min_dist</code> <span>0.0</span> · <code>metric</code> <span>cosine</span></dt><dd>점을 얼마나 촘촘하게 모을지, 거리를 무엇으로 잴지.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>③ 군집화</h3>
+        <dl>
+          <dt>HDBSCAN</dt><dd>점이 빽빽한 곳을 섬처럼 찾아 군집으로 묶는 방법. 토픽 개수를 미리 정하지 않아도 되고, 드문 곳의 점은 이상치로 남겨요.</dd>
+          <dt><code>min_cluster_size</code> <span>10</span></dt><dd>토픽이 되려면 최소 몇 개의 문서가 필요한지. 줄이면 작은 토픽이 많아지고, 키우면 작은 섬은 사라져요.</dd>
+          <dt><code>min_samples</code> <span>= min_cluster_size</span></dt><dd>점 하나가 '빽빽한 곳'에 있다고 보려면 이웃이 몇 개 필요한지. 키울수록 이상치가 늘어요.</dd>
+          <dt>안정성 <span>stability</span></dt><dd>수면을 내리며 섬이 얼마나 오래 버티는지. HDBSCAN은 오래 버틴 섬을 토픽으로 골라요.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>④ 토픽 표현</h3>
+        <dl>
+          <dt>토큰화 · <code>CountVectorizer</code></dt><dd>문서를 단어로 쪼개 세는 단계. 한국어는 형태소 분석기(예: <code>okt.nouns</code>)로 명사만 세면 이름이 깔끔해요.</dd>
+          <dt>c-TF-IDF</dt><dd>한 토픽의 문서를 모두 이어 붙인 '큰 문서'에서 단어 점수를 매기는 방법. <code>tf × log(1 + A ÷ f)</code></dd>
+          <dt>TF · IDF</dt><dd>TF는 그 토픽에서 단어가 나온 횟수, IDF는 여러 토픽에 두루 나오는 흔한 단어의 점수를 깎는 몫. A는 토픽 하나의 평균 단어 수, f는 전체에서의 빈도예요.</dd>
+          <dt>대표 단어 <span>representation</span></dt><dd>c-TF-IDF 점수가 높은 단어들. 토픽 이름은 번호와 상위 단어를 이어 <code>0_골_경기_감독_선수</code>처럼 만들어요.</dd>
+          <dt><code>representation_model</code></dt><dd>대표 단어를 다시 다듬는 선택 단계. <code>KeyBERTInspired</code>나 LLM으로 더 자연스러운 이름을 붙일 수 있어요.</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>자주 쓰는 명령</h3>
+        <dl>
+          <dt><code>fit_transform(docs)</code></dt><dd>모델을 학습하고 문서마다 토픽 번호를 돌려줘요.</dd>
+          <dt><code>transform(new_docs)</code></dt><dd>새 문서가 어느 토픽에 속하는지 예측해요.</dd>
+          <dt><code>get_topic_info()</code> · <code>get_topic(k)</code></dt><dd>토픽 목록 표, 토픽 k의 단어와 점수.</dd>
+          <dt><code>nr_topics</code> · <code>reduce_topics()</code></dt><dd>비슷한 토픽끼리 합쳐 토픽 수를 줄여요.</dd>
+          <dt><code>reduce_outliers()</code></dt><dd>이상치(-1) 문서를 가장 알맞은 토픽에 다시 넣어요. 그 뒤 <code>update_topics()</code>로 이름을 다시 계산해요.</dd>
+          <dt><code>visualize_topics()</code></dt><dd>토픽 사이의 거리를 지도로 그려 줘요.</dd>
+        </dl>
+      </section>
+    </div>
+  </section>
+
+  <footer>
+    <p>문서 90개와 숫자는 설명을 위해 만든 예시예요. HDBSCAN 군집화와 c-TF-IDF 점수는 이 페이지 안에서 실제로 계산하고, 임베딩 값과 UMAP 모양은 원리를 보여 주기 위해 흉내 낸 거예요.</p>
+    <p>더 알아보기: <a href="https://maartengr.github.io/BERTopic/" target="_blank" rel="noopener">BERTopic 공식 문서</a> · <a href="https://arxiv.org/abs/2203.05794" target="_blank" rel="noopener">Grootendorst (2022) 논문</a> · <a href="https://github.com/MaartenGr/BERTopic" target="_blank" rel="noopener">GitHub</a></p>
+  </footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+const EXPORT = location.hash === '#export';
+if (EXPORT) document.body.classList.add('export');
+
+/* =========================================================
+   0. 기본값 · 도우미
+   ========================================================= */
+const W = 1280, H = 720;
+const FD = '"Hahmlet","Noto Serif KR",serif';
+const FB = '"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif';
+const FM = '"IBM Plex Mono",ui-monospace,Menlo,monospace';
+const fnt = (s, w = 400, f = FB) => `${w} ${s}px ${f}`;
+const PAL = ['#FF8A5C', '#4FD1B5', '#F5C343', '#A393FF', '#FF6FA8', '#62B8F5', '#B6DC6A', '#E59BF2'];
+const NOISE_C = '#6E8194';
+const tc = k => k < 0 ? NOISE_C : PAL[k % PAL.length];
+const S = {
+  text: '#E8F0F6', muted: '#8EA3B5', faint: '#4E6478', line: '#1D3346', accent: '#7CC4F2',
+  panel: 'rgba(12,28,43,0.94)', paper: '#EFEADF', paperInk: '#27313B', point: '#DCE8F2', ink: '#08131D', good: '#7BE0A6', bad: '#FF8E8E'
+};
+const clamp = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x;
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eio = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const eo = t => 1 - Math.pow(1 - t, 3);
+const ei = t => t * t * t;
+const eback = t => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
+const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+const rgba = (h, a) => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
+const mix = (h1, h2, t) => { const a = hex(h1), b = hex(h2); return '#' + a.map((v, i) => Math.round(lerp(v, b[i], t)).toString(16).padStart(2, '0')).join(''); };
+const fmtT = s => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rng = mulberry32(20220311);
+function gauss() { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); const g = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); return Math.max(-2, Math.min(2, g)); }
+
+/* =========================================================
+   1. 예시 문서 90개  ([대괄호] = 토크나이저가 뽑은 명사)
+   ========================================================= */
+const RAW = {
+  soccer: [
+    "[오늘] [손흥민]이 결승 [골]을 넣었다", "[감독]이 [경기] 후 [선수]들을 칭찬했다", "[오늘] [리그] [경기] [정말] 짜릿했다",
+    "[골키퍼]의 선방으로 [팀]이 [승리]했다", "[월드컵] 예선 [대표팀] 명단이 발표됐다", "날카로운 [패스] 한 번에 수비가 무너졌다",
+    "[감독] 교체 후 [팀] 분위기가 [정말] 달라졌다", "[오늘] [경기]는 [골] 결정력이 아쉬웠다", "이번 시즌 [리그] [우승] 후보는 어디일까",
+    "[선수] 이적료가 사상 최고를 기록했다", "[페널티킥]을 막아 낸 [골키퍼]에게 박수를", "[대표팀]이 [월드컵] 본선에 진출했다",
+    "[슈팅]은 많았지만 [골]은 없었다", "부상에서 돌아온 [선수]가 [골]을 터뜨렸다", "[리그] 순위 싸움이 [정말] 치열하다",
+    "[감독]은 다음 [경기] [전술] 변화를 예고했다", "역습 한 방으로 [팀]이 [승리]를 거뒀다", "[팀] 주장이 [우승] 트로피를 들어 올렸다",
+    "[오늘] [경기]장에 [사람들]이 [정말] 많았다", "[코너킥]에서 헤더 [골]이 나왔다"
+  ],
+  food: [
+    "[김치찌개]는 묵은 [김치]로 끓여야 [맛]있다", "[양파]를 갈색이 될 때까지 볶아 주세요", "[오늘] 저녁 [레시피]는 [된장찌개]",
+    "[오븐]에서 20분 구우면 완성", "[반죽]을 하룻밤 숙성하면 [빵]이 부드럽다", "[소스]에 [마늘]을 듬뿍 넣었다",
+    "간단한 [파스타] [레시피]를 공유합니다", "[재료]는 [양파], [감자], [당근]이면 충분", "[정말] [맛]있는 [김치] 담그는 법",
+    "[빵] 굽는 냄새가 집 안에 가득하다", "[된장찌개]에 [두부]를 큼직하게 썰어 넣자", "[마늘]과 [올리브유]로 [파스타] [소스]를 만든다",
+    "냉장고 속 [재료]로 만드는 [레시피]", "[오븐] 온도는 180도로 맞춰 주세요", "[사람들]이 줄 서는 [맛]집 비결은 [소스]",
+    "[감자]를 삶아 으깨면 [샐러드] 완성", "[반죽]에 [설탕]을 조금 넣으면 [정말] 좋다", "[오늘]은 [김치] [볶음밥]을 만들었다"
+  ],
+  econ: [
+    "[코스피]가 2% 넘게 올랐다", "[한국은행]이 [금리]를 동결했다", "[환율]이 1,400원을 넘어섰다",
+    "[배당]을 많이 주는 [주식]에 [투자]하고 싶다", "[물가]가 올라 장보기가 무섭다", "[오늘] [주가]가 [정말] 크게 떨어졌다",
+    "[금리] 인하 기대에 [시장]이 들썩였다", "반도체 [주식] [주가]가 연일 최고치", "[투자]는 분산이 기본이다",
+    "[시장]은 [물가] 지표를 주시하고 있다", "[은행] 예금 [금리]가 내려갔다", "[환율] 상승에 수출 기업 [주가]가 올랐다",
+    "[코스피]가 3,000선을 회복했다", "[사람들]이 [주식] 대신 [채권]을 산다", "적립식 [투자]로 [배당]을 [정말] 꾸준히 모은다",
+    "[오늘] [시장] 변동성이 커졌다"
+  ],
+  space: [
+    "[누리호]가 [발사]에 성공했다", "[로켓] 1단이 바다 위에 착륙했다", "[위성]을 [궤도]에 올려놓았다",
+    "[달] [탐사선]이 착륙 지점을 정했다", "[화성]에 [탐사선]이 도착했다", "[오늘] 밤 [로켓] [발사]가 예정되어 있다",
+    "[우주인]이 [우주정거장]에서 돌아왔다", "[망원경]이 새로운 [은하]를 찍었다", "[블랙홀]의 그림자를 처음 관측했다",
+    "제임스 웹 [망원경]의 [사진]이 공개됐다", "[별]이 태어나는 [성운]의 모습", "[오늘] 밤 [유성우]가 [정말] 잘 보인다",
+    "[은하] 충돌 [사진]이 놀랍다", "[사람들]이 [별]을 보러 천문대에 모였다"
+  ],
+  pet: [
+    "[강아지]와 [공원]을 [산책]했다", "[반려견]이랑 동네 한 바퀴 돌았다", "[고양이]가 [사료]를 잘 안 먹는다",
+    "[동물병원]에서 [예방접종]을 맞혔다", "[고양이] [장난감]을 새로 샀다", "[강아지] [털]이 너무 많이 빠진다",
+    "[오늘] [고양이]가 [정말] 귀여웠다", "[유기견] [입양]을 고민 중이다", "[산책] 후 [강아지] 발을 닦아 주자",
+    "[사료]를 바꾸니 [털]에 윤기가 돈다", "[고양이]가 새벽에 [집사]를 깨웠다", "[사람들]이 [반려견] 놀이터에 모였다"
+  ],
+  noise: [
+    "[내일] [시험]이라 걱정이다", "[비]가 와서 [우산]을 샀다", "[오늘] [날씨]가 [정말] 좋다", "[지하철]이 [정말] 붐볐다",
+    "[친구]에게 [생일] 선물을 보냈다", "[이사] 준비로 정신이 없다", "[노래] 가사가 자꾸 생각난다", "[주말]에 [영화]를 봤다",
+    "[휴대폰] 배터리가 금방 닳는다", "[오늘]따라 [잠]이 쏟아진다"
+  ]
+};
+const GROUPS = {
+  soccer: { c: [-1.0, -0.3], sd: 0.13 }, food: { c: [-0.12, 0.4], sd: 0.13 }, econ: { c: [0.38, -0.4], sd: 0.12 },
+  space: { c: [1.04, -0.06], sd: 0.075, c2: [1.2, 0.3] }, pet: { c: [-0.98, 0.5], sd: 0.1 }
+};
+const NOISE_POS = [[-0.42, -0.36], [0.72, 0.3], [-0.35, -0.8], [1.45, -0.62], [0.45, 0.72], [-1.5, 0.1], [0.75, -0.8], [-0.56, 0.05], [-0.5, 0.85], [1.5, 0.78]];
+const LLM_NAME = { soccer: '축구 경기와 선수 소식', food: '집밥 요리 레시피', econ: '주식·금리 경제 뉴스', space: '로켓 발사와 우주 관측', pet: '반려동물 돌보기', noise: '일상 잡담' };
+
+const DOCS = [];
+for (const g of Object.keys(RAW)) {
+  RAW[g].forEach((raw, k) => {
+    const tokens = [...raw.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
+    const text = raw.replace(/[\[\]]/g, '');
+    let x, y, sub = 0;
+    if (g === 'noise') { [x, y] = NOISE_POS[k]; }
+    else {
+      const G = GROUPS[g]; let c = G.c;
+      if (g === 'space' && k >= 7) { c = G.c2; sub = 1; }
+      x = c[0] + gauss() * G.sd; y = c[1] + gauss() * G.sd * 0.9;
+    }
+    DOCS.push({ id: DOCS.length, g, sub, text, tokens, x, y });
+  });
+}
+const N = DOCS.length;
+const IA = DOCS.findIndex(d => d.text.startsWith('강아지와')), IB = DOCS.findIndex(d => d.text.startsWith('반려견이랑')), IC = DOCS.findIndex(d => d.text.startsWith('코스피가 2%'));
+DOCS[IA].x = -0.99; DOCS[IA].y = 0.47; DOCS[IB].x = -0.93; DOCS[IB].y = 0.51;
+const XMIN = -1.6, XMAX = 1.6, YMIN = -0.9, YMAX = 0.9;
+const MEANX = DOCS.reduce((s, d) => s + d.x, 0) / N, MEANY = DOCS.reduce((s, d) => s + d.y, 0) / N;
+
+// 예시 임베딩 (16칸만 보여 주는 가짜 벡터: 같은 주제일수록 비슷하게)
+const DIM = 16;
+const PROTO = {}; for (const g of Object.keys(GROUPS)) PROTO[g] = Array.from({ length: DIM }, () => gauss());
+const SUBP = Array.from({ length: DIM }, () => gauss() * 0.8);
+const unit = v => { const s = Math.hypot(...v) || 1; return v.map(x => x / s); };
+const VEC = DOCS.map(d => unit(d.g === 'noise' ? Array.from({ length: DIM }, () => gauss()) : PROTO[d.g].map((p, k) => p + (d.sub ? SUBP[k] : 0) + gauss() * 0.45)));
+VEC[IB] = unit(VEC[IA].map(x => x + gauss() * 0.08));
+const cosSim = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+
+// 도입부 종이 더미 · 격자 · 흘러 들어가는 순서
+const PILE = DOCS.map(() => ({ x: 110 + rng() * 1060, y: 120 + rng() * 470, r: (rng() - .5) * 0.7 }));
+const ORDER = DOCS.map((_, i) => i);
+for (let i = N - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [ORDER[i], ORDER[j]] = [ORDER[j], ORDER[i]]; }
+const SLOT = new Array(N), GRIDK = new Array(N);
+ORDER.forEach((di, k) => { SLOT[di] = { x: 94 + (k % 15) * 78, y: 172 + Math.floor(k / 15) * 54 }; GRIDK[di] = k; });
+const FALLK = DOCS.map(() => rng()).map((v, i, a) => a.filter(u => u < v).length);
+const ST = DOCS.map(() => rng()).map((v, i, a) => 48.6 + a.filter(u => u < v).length * 0.042);
+const AXES = Array.from({ length: 64 }, (_, i) => ({ a: rng() * Math.PI * 2, len: 230 + rng() * 170, w: rng() }));
+
+// k-최근접 이웃 (UMAP이 기억하는 이웃 관계)
+const EDGES = [];
+{
+  const seen = new Set();
+  DOCS.forEach((d, i) => {
+    DOCS.map((e, j) => [j, Math.hypot(d.x - e.x, d.y - e.y)]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]).slice(0, 3)
+      .forEach(([j, dist]) => { const key = i < j ? i + '-' + j : j + '-' + i; if (!seen.has(key) && dist < 0.45) { seen.add(key); EDGES.push([i, j]); } });
+  });
+}
+
+/* =========================================================
+   2. 알고리즘: HDBSCAN · c-TF-IDF (페이지 안에서 실제 계산)
+   ========================================================= */
+function hdbscan(P, mcs, ms) {
+  ms = ms || mcs;
+  const n = P.length, D = [];
+  for (let i = 0; i < n; i++) D.push(new Float64Array(n));
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) { const d = Math.hypot(P[i][0] - P[j][0], P[i][1] - P[j][1]); D[i][j] = D[j][i] = d; }
+  const core = D.map(row => Array.from(row).sort((a, b) => a - b)[Math.min(ms, n) - 1]);
+  const mr = (i, j) => Math.max(core[i], core[j], D[i][j]);
+  const inT = new Uint8Array(n), best = new Float64Array(n).fill(Infinity), from = new Int32Array(n).fill(-1);
+  const edges = []; let cur = 0; inT[0] = 1;
+  for (let step = 1; step < n; step++) {
+    let nb = -1, bv = Infinity;
+    for (let j = 0; j < n; j++) if (!inT[j]) {
+      const w = mr(cur, j); if (w < best[j]) { best[j] = w; from[j] = cur; }
+      if (best[j] < bv) { bv = best[j]; nb = j; }
+    }
+    edges.push([from[nb], nb, bv]); inT[nb] = 1; cur = nb;
+  }
+  edges.sort((a, b) => a[2] - b[2]);
+  const par = new Int32Array(2 * n).map((_, i) => i), size = new Int32Array(2 * n).fill(1);
+  const find = x => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+  const Hh = []; let next = n;
+  for (const [a, b, w] of edges) {
+    const ra = find(a), rb = find(b);
+    Hh.push([ra, rb, w, size[ra] + size[rb]]);
+    par[ra] = next; par[rb] = next; size[next] = size[ra] + size[rb]; next++;
+  }
+  const root = 2 * n - 2, sz = i => i < n ? 1 : Hh[i - n][3];
+  const bfs = r => { const out = [], q = [r]; while (q.length) { const x = q.shift(); out.push(x); if (x >= n) q.push(Hh[x - n][0], Hh[x - n][1]); } return out; };
+  const relabel = new Int32Array(2 * n); relabel[root] = n; let nl = n + 1;
+  const ignore = new Uint8Array(2 * n), CT = [];
+  for (const node of bfs(root)) {
+    if (ignore[node] || node < n) continue;
+    const [l, r, dist] = Hh[node - n], lam = dist > 0 ? 1 / dist : 1e9;
+    const lc = sz(l), rc = sz(r);
+    const drop = side => { for (const s of bfs(side)) { if (s < n) CT.push([relabel[node], s, lam, 1]); ignore[s] = 1; } };
+    if (lc >= mcs && rc >= mcs) {
+      relabel[l] = nl++; CT.push([relabel[node], relabel[l], lam, lc]);
+      relabel[r] = nl++; CT.push([relabel[node], relabel[r], lam, rc]);
+    } else if (lc < mcs && rc < mcs) { drop(l); drop(r); }
+    else if (lc < mcs) { relabel[r] = relabel[node]; drop(l); }
+    else { relabel[l] = relabel[node]; drop(r); }
+  }
+  const birth = { [n]: 0 };
+  for (const [, c, lam, s] of CT) if (s > 1) birth[c] = lam;
+  const stab = {}; for (const k of Object.keys(birth)) stab[k] = 0;
+  for (const [p, , lam, s] of CT) stab[p] += (lam - birth[p]) * s;
+  const kids = {}; for (const [p, c, , s] of CT) if (s > 1) (kids[p] = kids[p] || []).push(c);
+  const isC = {};
+  for (const node of Object.keys(stab).map(Number).sort((a, b) => b - a).filter(x => x !== n)) {
+    const sub = (kids[node] || []).reduce((acc, c) => acc + stab[c], 0);
+    if (sub > stab[node]) { isC[node] = false; stab[node] = sub; }
+    else { isC[node] = true; const q = [...(kids[node] || [])]; while (q.length) { const x = q.pop(); isC[x] = false; q.push(...(kids[x] || [])); } }
+  }
+  const parentOf = {}; for (const [p, c] of CT) parentOf[c] = p;
+  const labels = new Int32Array(n).fill(-1);
+  for (let i = 0; i < n; i++) { let x = parentOf[i]; while (x !== undefined && x !== n) { if (isC[x]) { labels[i] = x; break; } x = parentOf[x]; } }
+  const cnt = {}; for (const l of labels) if (l >= 0) cnt[l] = (cnt[l] || 0) + 1;
+  const order = Object.keys(cnt).map(Number).sort((a, b) => cnt[b] - cnt[a] || a - b);
+  const remap = {}; order.forEach((l, i) => remap[l] = i);
+  return Array.from(labels, l => l < 0 ? -1 : remap[l]);
+}
+
+// c-TF-IDF: W(t,c) = tf(t,c) × log(1 + A / f(t))   (-1 이상치 묶음도 한 클래스로 계산, BERTopic과 동일)
+function ctfidf(labels, docs = DOCS) {
+  const classes = [...new Set(labels)].sort((a, b) => a - b);
+  const tf = {}; classes.forEach(c => tf[c] = {});
+  docs.forEach((d, i) => { for (const w of d.tokens) tf[labels[i]][w] = (tf[labels[i]][w] || 0) + 1; });
+  const f = {}; let total = 0;
+  for (const c of classes) for (const [w, v] of Object.entries(tf[c])) { f[w] = (f[w] || 0) + v; total += v; }
+  const A = total / classes.length, out = {};
+  for (const c of classes) {
+    out[c] = Object.entries(tf[c]).map(([w, v]) => ({ w, tf: v, f: f[w], idf: Math.log(1 + A / f[w]), score: v * Math.log(1 + A / f[w]) }))
+      .sort((a, b) => b.score - a.score || b.tf - a.tf || (a.w < b.w ? -1 : 1));
+  }
+  return { classes, out, A, tf };
+}
+
+const LCACHE = {}, INFO = {};
+const getLabels = m => LCACHE[m] || (LCACHE[m] = hdbscan(DOCS.map(d => [d.x, d.y]), m));
+function info(m) {
+  if (INFO[m]) return INFO[m];
+  const L = getLabels(m), K = Math.max(-1, ...L) + 1, ct = ctfidf(L), topics = [];
+  for (let k = -1; k < K; k++) {
+    const idx = []; L.forEach((l, i) => { if (l === k) idx.push(i); });
+    if (!idx.length) continue;
+    const cx = idx.reduce((s, i) => s + DOCS[i].x, 0) / idx.length, cy = idx.reduce((s, i) => s + DOCS[i].y, 0) / idx.length;
+    const top = Math.min(...idx.map(i => DOCS[i].y));
+    const words = (ct.out[k] || []).slice(0, 4).map(o => o.w);
+    const gc = {}; idx.forEach(i => gc[DOCS[i].g] = (gc[DOCS[i].g] || 0) + 1);
+    const dom = Object.entries(gc).sort((a, b) => b[1] - a[1])[0][0];
+    topics.push({ k, idx, n: idx.length, cx, cy, top, words, name: `${k}_${words.join('_')}`, dom });
+  }
+  const byK = {}; topics.forEach(tp => byK[tp.k] = tp);
+  return INFO[m] = { m, L, K, ct, topics, byK, noise: L.filter(l => l < 0).length };
+}
+
+/* ---------- 밀도 지형 (HDBSCAN의 '섬' 비유) ---------- */
+const GW = 320, GH = 180, CELL = (XMAX - XMIN) / GW, KH = 0.07, KR = Math.ceil(3 * KH / CELL);
+const DENS = new Float32Array(GW * GH);
+function kernelEach(d, fn) {
+  const cx = (d.x - XMIN) / CELL, cy = (d.y - YMIN) / CELL;
+  for (let gy = Math.max(0, Math.floor(cy - KR)); gy <= Math.min(GH - 1, Math.ceil(cy + KR)); gy++)
+    for (let gx = Math.max(0, Math.floor(cx - KR)); gx <= Math.min(GW - 1, Math.ceil(cx + KR)); gx++) {
+      const dx = (gx + .5 - cx) * CELL, dy = (gy + .5 - cy) * CELL;
+      fn(gy * GW + gx, Math.exp(-(dx * dx + dy * dy) / (2 * KH * KH)));
+    }
+}
+DOCS.forEach(d => kernelEach(d, (i, w) => DENS[i] += w));
+{ let mx = 0; for (const v of DENS) mx = Math.max(mx, v); for (let i = 0; i < DENS.length; i++) DENS[i] /= mx; }
+const DENSP = DOCS.map(d => DENS[Math.min(GH - 1, Math.floor((d.y - YMIN) / CELL)) * GW + Math.min(GW - 1, Math.floor((d.x - XMIN) / CELL))]);
+const OWN = {};
+function owners(m) {
+  if (OWN[m]) return OWN[m];
+  const L = getLabels(m), K = Math.max(-1, ...L) + 1;
+  const acc = Array.from({ length: K + 1 }, () => new Float32Array(GW * GH));
+  DOCS.forEach((d, i) => { const a = acc[L[i] + 1]; kernelEach(d, (c, w) => a[c] += w); });
+  const own = new Int8Array(GW * GH).fill(-2);
+  for (let c = 0; c < GW * GH; c++) { let bk = -2, bv = 1e-4; for (let k = 0; k <= K; k++) if (acc[k][c] > bv) { bv = acc[k][c]; bk = k - 1; } own[c] = bk; }
+  return OWN[m] = own;
+}
+const tcv = document.createElement('canvas'); tcv.width = GW; tcv.height = GH;
+const tctx = tcv.getContext('2d'); const timg = tctx.createImageData(GW, GH);
+const BAND = new Int8Array(GW * GH);
+const NEUTRAL = [0, 1, 2, 3, 4].map(b => hex(mix('#2F4A43', '#9FBBA0', b / 4)));
+const TCOL = {};
+[-1, 0, 1, 2, 3, 4, 5, 6, 7].forEach(k => { const c = tc(k); TCOL[k] = [0, 1, 2, 3, 4].map(b => hex(mix(mix(c, '#0A1520', k < 0 ? .45 : .5), mix(c, '#FFFFFF', k < 0 ? .1 : .28), b / 4))); });
+let terrainKey = '';
+function paintTerrain(L, colorMix, own, focus, dim) {
+  const key = [L.toFixed(3), colorMix.toFixed(2), own ? own.length + ':' + own._m : '', focus, dim.toFixed(2)].join('|');
+  if (key === terrainKey) return; terrainKey = key;
+  const d = timg.data, span = Math.max(1e-6, 1 - L);
+  for (let i = 0; i < GW * GH; i++) BAND[i] = DENS[i] >= L ? Math.min(4, Math.floor((DENS[i] - L) / span * 5)) : -1;
+  for (let gy = 0; gy < GH; gy++) for (let gx = 0; gx < GW; gx++) {
+    const i = gy * GW + gx, b = BAND[i], p = i * 4;
+    if (b < 0) {
+      if (L > 0.05 && DENS[i] > L * 0.6) { d[p] = 90; d[p + 1] = 160; d[p + 2] = 200; d[p + 3] = 34; }
+      else d[p + 3] = 0;
+      continue;
+    }
+    let [r, g, bl] = NEUTRAL[b];
+    if (colorMix > 0 && own && own[i] > -2) {
+      const c = TCOL[own[i]][b]; r = lerp(r, c[0], colorMix); g = lerp(g, c[1], colorMix); bl = lerp(bl, c[2], colorMix);
+    }
+    const edge = (gx + 1 < GW && BAND[i + 1] !== b) || (gy + 1 < GH && BAND[i + GW] !== b);
+    const k = edge ? 0.78 : 1;
+    let a = 238;
+    if (dim > 0 && own && own[i] !== focus) a *= 1 - dim * 0.75;
+    d[p] = r * k; d[p + 1] = g * k; d[p + 2] = bl * k; d[p + 3] = a;
+  }
+  tctx.putImageData(timg, 0, 0);
+}
+
+/* =========================================================
+   3. 타임라인 · 자막
+   ========================================================= */
+const C = { intro: 0, docs: 10, embed: 21, umap: 55, cluster: 84, ctf: 124, result: 170, lego: 188, outro: 208, end: 226 };
+const CHAPTERS = [
+  { id: 'intro', n: '', title: '들어가며', sub: '글 더미 앞에서', t: 0 },
+  { id: 'docs', n: '', title: '문서 더미', sub: '짧은 글 90개', t: 10 },
+  { id: 'embed', n: '1', title: '임베딩', sub: '문장을 숫자로', t: 21 },
+  { id: 'umap', n: '2', title: '차원 축소 · UMAP', sub: '펼쳐서 지도로', t: 55 },
+  { id: 'cluster', n: '3', title: '군집화 · HDBSCAN', sub: '빽빽한 섬 찾기', t: 84 },
+  { id: 'ctf', n: '4', title: 'c-TF-IDF', sub: '섬에 이름 붙이기', t: 124 },
+  { id: 'result', n: '', title: '완성된 토픽 지도', sub: '결과 읽기', t: 170 },
+  { id: 'lego', n: '', title: '레고 블록', sub: '부품 바꿔 끼우기', t: 188 },
+  { id: 'outro', n: '', title: '정리', sub: '내 문서로 해 보기', t: 208 }
+];
+const CAPTIONS = [
+  [0.6, 4.8, '여기 글이 잔뜩 있어요. 뉴스, 리뷰, 댓글, 일기…'],
+  [4.8, 10, '이 글들이 무슨 이야기를 하는지, 하나하나 읽지 않고 알 수 있을까요?'],
+  [10, 15, 'BERTopic은 글 더미를 ‘주제 지도’로 바꿔 주는 도구예요.'],
+  [15, 21, '과정은 딱 네 단계. 숫자로 바꾸고, 펼치고, 무리 짓고, 이름 붙이기!'],
+  [21, 26, '① 먼저 컴퓨터가 알아듣게 글을 숫자로 바꿔요. 이걸 ‘임베딩’이라고 해요.'],
+  [26, 31.5, 'BERT 같은 언어 모델이 문장을 통째로 읽고, 뜻을 숫자 수백 개로 요약하죠.'],
+  [31.5, 37, '신기한 점은, 단어가 달라도 뜻이 비슷하면 숫자도 비슷해진다는 거예요.'],
+  [37, 42.5, '‘강아지와 공원을 산책했다’와 ‘반려견이랑 동네 한 바퀴 돌았다’는 겹치는 단어가 없는데도 아주 가깝죠.'],
+  [42.5, 47, '반면 ‘코스피가 2% 넘게 올랐다’는 멀리 떨어져 있어요.'],
+  [47, 55, '이렇게 모든 문서가 ‘의미 공간’ 속의 점 하나가 됩니다.'],
+  [55, 61, '② 그런데 이 점들은 384차원 공간에 있어요. 사람은 볼 수 없고, 컴퓨터도 무리를 찾기 버거워요.'],
+  [61, 67, 'UMAP은 ‘누가 누구의 이웃인지’를 기억해 둔 채 공간을 납작하게 펼쳐요.'],
+  [67, 74, '돌돌 말린 종이를 펴듯이. 가까웠던 점은 펼친 뒤에도 가깝게 남아요.'],
+  [74, 84, '여기선 보기 쉽게 2차원으로 그렸지만, BERTopic은 기본으로 5차원까지 줄여요.'],
+  [84, 90, '③ 이제 점이 빽빽하게 모인 곳을 찾을 차례. 이 일은 HDBSCAN이 맡아요.'],
+  [90, 96, '점이 많은 곳은 높은 땅, 드문 곳은 낮은 땅이라고 생각해 보세요.'],
+  [96, 103, '물이 빠질수록 섬이 드러나요. 그중 충분히 크고 오래 버티는 섬을 토픽으로 골라요.'],
+  [103, 110, '어느 섬에도 속하지 못한 점은 억지로 끼워 넣지 않고 ‘이상치(-1)’로 남겨 둬요.'],
+  [110, 117, '토픽 개수를 미리 정하지 않아도 된다는 게 큰 장점이에요.'],
+  [117, 124, '대신 ‘최소 군집 크기’로 섬의 최소 크기를 정해요. 작게 하면 섬이 쪼개지고, 크게 하면 작은 섬이 사라져요.'],
+  [124, 130, '④ 섬마다 이름을 붙여야겠죠? 먼저 한 섬의 문서를 모두 합쳐 ‘큰 문서’ 하나로 만들어요.'],
+  [130, 136, '그리고 단어를 셉니다. 자주 나온 단어일수록 중요하겠죠. 이게 TF예요.'],
+  [136, 142, '그런데 ‘오늘’, ‘정말’ 같은 말은 어느 섬에나 흔해서 이름표로 쓸모가 없어요.'],
+  [142, 149, '그래서 여러 섬에 두루 나오는 단어는 점수를 깎아요. 이게 IDF예요.'],
+  [149, 157, '이 섬에선 자주, 다른 섬에선 드물게. 둘을 곱한 c-TF-IDF가 섬의 대표 단어를 골라 줘요.'],
+  [157, 170, '같은 계산을 모든 섬에 하면, 섬마다 이름표가 붙어요.'],
+  [170, 176, '완성! 문서 더미가 이름 붙은 주제 지도가 되었어요.'],
+  [176, 182, '토픽마다 대표 단어와 문서 수를 한눈에 볼 수 있어요.'],
+  [182, 188, '새 문서가 들어와도 가장 가까운 섬을 찾아 토픽을 알려 줘요.'],
+  [188, 194, 'BERTopic의 단계들은 레고 블록처럼 바꿔 끼울 수 있어요.'],
+  [194, 201, '임베딩 모델도, 차원 축소도, 군집화 방법도 원하는 것으로 교체할 수 있죠.'],
+  [201, 208, '마지막에 KeyBERT나 LLM으로 토픽 이름을 더 자연스럽게 다듬을 수도 있어요.'],
+  [208, 214, '정리하면, 숫자로 바꾸고 → 펼치고 → 무리 짓고 → 이름 붙이기.'],
+  [214, 220, '파이썬 몇 줄이면 여러분의 문서로 직접 해 볼 수 있어요.'],
+  [220, 226.1, '이제 아래 ‘직접 해 보기’ 패널에서 값을 바꿔 보세요!']
+];
+const STR = {
+  introSub: '글 더미에서 주제를 찾아내는 네 단계', introSmall: 'BERT 임베딩 + UMAP + HDBSCAN + c-TF-IDF',
+  badges: [['1', '임베딩', '문장 → 숫자'], ['2', 'UMAP', '펼쳐서 지도로'], ['3', 'HDBSCAN', '빽빽한 섬 찾기'], ['4', 'c-TF-IDF', '섬에 이름 붙이기']],
+  model: '문장 임베딩 모델', sent: '문장', nums: '뜻을 숫자 384개로 요약 (16개만 표시)', overlap: '겹치는 단어', sim: '유사도', ex: '예시 값',
+  dims: '차원', dimNote: '실제 BERTopic 기본값은 5차원 (n_components=5)', neighbors: '이웃끼리 연결한 선 = UMAP이 기억하는 관계',
+  axis: ['차원 1', '차원 2', '차원 3', '차원 4', '…', '차원 384'], umapAx: ['UMAP 1', 'UMAP 2'],
+  topic: '토픽', outlier: '이상치', docsN: '개', found: '발견', minSize: '최소 군집 크기',
+  bigDoc: '의 큰 문서', merged: '문서를 모두 이어 붙였어요', more: '외',
+  ph1: '① 단어 세기 · TF', ph2: '어느 섬에나 나오는 단어는?', ph3: '② 흔한 단어는 점수 깎기 · IDF', ph4: '③ 점수 순서 = 토픽의 이름',
+  colWord: '단어', colTf: '이 섬에서 나온 횟수', colTfIdf: 'TF × IDF', colPres: '등장한 섬',
+  f1: 'c-TF-IDF  =  이 섬에서의 빈도  ×  log(1 + A ÷ 전체에서의 빈도)', f2: 'A = 섬 하나의 평균 단어 수', nameTag: '이름표',
+  mini: '지도', table: 'topic_model.get_topic_info()', newDoc: '골키퍼가 또 한 번 선방했다', newLbl: '새 문서', arrow: '→',
+  legoTitle: '토픽 이름 다듬기', legoBefore: '기본 이름', legoAfter: 'LLM이 붙인 이름', legoKb: 'KeyBERTInspired: 문서와 더 잘 어울리는 단어로 다시 고르기',
+  recap: [['숫자로 바꾸기', '임베딩 · SBERT'], ['펼치기', '차원 축소 · UMAP'], ['무리 짓기', '군집화 · HDBSCAN'], ['이름 붙이기', '대표 단어 · c-TF-IDF']],
+  endLine: '아래 패널에서 직접 만져 보세요', url: 'maartengr.github.io/BERTopic'
+};
+const BLOCKS = [
+  { step: '임베딩', a: 'SBERT', b: 'OpenAI', col: '#62B8F5', p: 'embedding_model', va: 'SentenceTransformer(…)', vb: 'OpenAIBackend(…)', sw: 194.4 },
+  { step: '차원 축소', a: 'UMAP', b: 'PCA', col: '#A393FF', p: 'umap_model', va: 'UMAP(n_components=5)', vb: 'PCA(n_components=5)', sw: 195.9 },
+  { step: '군집화', a: 'HDBSCAN', b: 'k-Means', col: '#4FD1B5', p: 'hdbscan_model', va: 'HDBSCAN(min_cluster_size=10)', vb: 'KMeans(n_clusters=5)', sw: 197.4 },
+  { step: '토큰화', a: 'CountVectorizer', b: '형태소 분석기', col: '#F5C343', p: 'vectorizer_model', va: 'CountVectorizer()', vb: 'CountVectorizer(tokenizer=okt.nouns)', sw: 198.9 },
+  { step: '가중치', a: 'c-TF-IDF', b: null, col: '#FF8A5C', p: 'ctfidf_model', va: 'ClassTfidfTransformer()', vb: null, sw: 1e9 },
+  { step: '다듬기 (선택)', a: '없음', b: 'KeyBERTInspired', c: 'LLM', col: '#FF6FA8', p: 'representation_model', va: 'None', vb: 'KeyBERTInspired()', vc: 'OpenAI(…)  # LLM', sw: 202, sw2: 204.6, opt: true }
+];
+const REVERT = 200.6;
+const ALLTEXT = [...new Set(JSON.stringify([CAPTIONS, CHAPTERS, STR, BLOCKS, RAW, LLM_NAME]).split(''))].join('') + '0123456789.,×÷=+-_()%·…→↓ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+const chapterAt = t => { let c = 0; CHAPTERS.forEach((ch, i) => { if (t >= ch.t) c = i; }); return c; };
+const captionAt = t => { const c = CAPTIONS.find(c => t >= c[0] && t < c[1]); return c ? c[2] : ''; };
+
+/* ---------- 사용자 상태 ---------- */
+let userMcs = 10, userFocus = 0, waterOverride = null, showEdges = false;
+let cmpA = IA, cmpB = IB, cmpNext = 0;
+const USERDOCS = [];
+
+function labelsAt(t) {
+  if (t >= 117.6 && t < 120.4) return 5;
+  if (t >= 120.4 && t < 123.2) return 13;
+  return userMcs;
+}
+const LF = 0.11;
+function waterAt(t) {
+  if (t < 96) return 0.035;
+  if (t < 97.2) return lerp(0.035, 1.02, ei(seg(t, 96, 97.2)));
+  if (waterOverride != null) return waterOverride;
+  return lerp(1.02, LF, eio(seg(t, 97.2, 103)));
+}
+function focusTopic(inf) { if (inf.byK[userFocus]) return userFocus; return inf.K > 0 ? 0 : null; }
+
+/* ---------- 지도 보기 (화면 좌표 변환) ---------- */
+const V_FULL = { cx: 640, cy: 392, s: 300 }, V_MINI = { cx: 1150, cy: 92, s: 40 }, V_RES = { cx: 372, cy: 404, s: 205 };
+const lerpV = (a, b, p) => ({ cx: lerp(a.cx, b.cx, p), cy: lerp(a.cy, b.cy, p), s: lerp(a.s, b.s, p) });
+function viewAt(t) {
+  if (t < 126) return V_FULL;
+  if (t < 157) return lerpV(V_FULL, V_MINI, eio(seg(t, 126, 130.5)));
+  if (t < C.result) return lerpV(V_MINI, V_FULL, eio(seg(t, 157, 161)));
+  return lerpV(V_FULL, V_RES, eio(seg(t, C.result, C.result + 3)));
+}
+const toS = (x, y, v) => [v.cx + x * v.s, v.cy + y * v.s];
+
+/* ---------- 말린 종이(스위스 롤) → 펼친 지도 ---------- */
+function rollP(x, y, s) {
+  const u = y - YMIN;
+  if (s >= 0.999) return [x, u, 0];
+  const R0 = 0.12 * Math.exp(5.5 * s), al = 0.05 * (1 - s);
+  const R = R0 + al * u, phi = al > 1e-6 ? Math.log(R / R0) / al : u / R0;
+  const Y = R * Math.sin(phi), Z = R0 - R * Math.cos(phi), b = seg(s, 0.8, 1);
+  return [x, lerp(Y, u, b), lerp(Z, 0, b)];
+}
+let cloudCache = { t: -1, v: null };
+function cloudAt(t) {
+  if (cloudCache.t === t) return cloudCache.v;
+  const s = eio(seg(t, 62, 72)), e2 = eio(seg(t, 63, 72));
+  const yaw = lerp(0.95 * Math.sin(0.42 * (t - 49)), 0, e2), pitch = lerp(-0.22, 0, e2);
+  const raw = DOCS.map(d => rollP(d.x, d.y, s));
+  let cx = 0, cy = 0, cz = 0; raw.forEach(p => { cx += p[0]; cy += p[1]; cz += p[2]; }); cx /= N; cy /= N; cz /= N;
+  const cs = Math.cos(yaw), sn = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), v = V_FULL;
+  const out = raw.map(p => {
+    const X = p[0] - cx + MEANX, Y = p[1] - cy + MEANY, Z = p[2] - cz;
+    const X1 = X * cs + Z * sn, Z1 = -X * sn + Z * cs;
+    const Y2 = Y * cp - Z1 * sp, Z2 = Y * sp + Z1 * cp;
+    const f = 3.4 / (3.4 + Z2);
+    return [v.cx + X1 * f * v.s, v.cy + Y2 * f * v.s, Z2, f];
+  });
+  cloudCache = { t, v: out }; return out;
+}
+const MC = { x: 640, y: 372 };
+let pCache = { t: -1, P: null };
+function pointsAt(t) {
+  if (pCache.t === t) return pCache.P;
+  if (t < 48.6 || t > 191) { pCache = { t, P: null }; return null; }
+  const cloud = t < 72.01 ? cloudAt(t) : null, v = viewAt(t), P = new Array(N);
+  for (let i = 0; i < N; i++) {
+    let x = 0, y = 0, z = 0, f = 1, vis = true;
+    if (t < 55 && t < ST[i] + 0.65) vis = false;
+    else if (t < 55) { const q = eo(seg(t, ST[i] + 0.65, ST[i] + 1.5)); x = lerp(MC.x, cloud[i][0], q); y = lerp(MC.y, cloud[i][1], q); z = cloud[i][2]; f = lerp(0.6, cloud[i][3], q); }
+    else if (t < 72) { [x, y, z, f] = cloud[i]; }
+    else { [x, y] = toS(DOCS[i].x, DOCS[i].y, v); }
+    P[i] = { x, y, z, f, vis };
+  }
+  pCache = { t, P }; return P;
+}
+
+/* =========================================================
+   4. 캔버스 · 그리기 도구
+   ========================================================= */
+const cv = document.getElementById('stage'), ctx = cv.getContext('2d');
+let SCALE = 1, dirty = true;
+const bgc = document.createElement('canvas'), bgx = bgc.getContext('2d');
+function buildBg() {
+  bgc.width = cv.width; bgc.height = cv.height;
+  bgx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  const g = bgx.createRadialGradient(640, 330, 60, 640, 360, 820);
+  g.addColorStop(0, '#12283D'); g.addColorStop(1, '#08121C');
+  bgx.fillStyle = g; bgx.fillRect(0, 0, W, H);
+  bgx.fillStyle = 'rgba(140,180,210,0.075)';
+  for (let x = 20; x < W; x += 40) for (let y = 20; y < H; y += 40) bgx.fillRect(x - 1, y - 1, 2, 2);
+}
+function resize() {
+  if (EXPORT) { cv.width = 1920; cv.height = 1080; }
+  else {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.max(320, Math.round(r.width * dpr)); cv.height = Math.round(cv.width * 9 / 16);
+  }
+  SCALE = cv.width / W; buildBg(); terrainKey = ''; dirty = true;
+}
+function rr(x, y, w, h, r) { r = Math.max(0, Math.min(r, w / 2, h / 2)); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function txt(str, x, y, o = {}) {
+  ctx.font = fnt(o.size || 14, o.weight || 400, o.fam || FB); ctx.fillStyle = o.color || S.text;
+  ctx.textAlign = o.align || 'left'; ctx.textBaseline = o.base || 'alphabetic';
+  if (o.alpha !== undefined) { const p = ctx.globalAlpha; ctx.globalAlpha = p * o.alpha; ctx.fillText(str, x, y); ctx.globalAlpha = p; }
+  else ctx.fillText(str, x, y);
+}
+function tw(str, size, weight = 400, fam = FB) { ctx.font = fnt(size, weight, fam); return ctx.measureText(str).width; }
+function pill(str, x, y, o = {}) {
+  const size = o.size || 13, weight = o.weight || 600, fam = o.fam || FB, padX = o.padX ?? 10, h = o.h || size + 12;
+  const w = tw(str, size, weight, fam) + padX * 2, x0 = o.align === 'left' ? x : o.align === 'right' ? x - w : x - w / 2;
+  const pa = ctx.globalAlpha; if (o.alpha !== undefined) ctx.globalAlpha = pa * o.alpha;
+  rr(x0, y - h / 2, w, h, o.r ?? h / 2); ctx.fillStyle = o.bg || 'rgba(10,21,32,0.88)'; ctx.fill();
+  if (o.stroke) { ctx.strokeStyle = o.stroke; ctx.lineWidth = o.lw || 1.2; ctx.stroke(); }
+  txt(str, x0 + w / 2, y + 0.5, { size, weight, fam, color: o.fg || S.text, align: 'center', base: 'middle' });
+  ctx.globalAlpha = pa;
+  return w;
+}
+const WRAP = new Map();
+function wrap(str, size, weight, maxW, maxLines) {
+  const key = [str, size, weight, maxW, maxLines].join('|'); if (WRAP.has(key)) return WRAP.get(key);
+  ctx.font = fnt(size, weight); const lines = []; let cur = '';
+  for (const w of str.split(' ')) {
+    const cand = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(cand).width <= maxW) { cur = cand; continue; }
+    if (cur) lines.push(cur);
+    cur = w;
+    while (ctx.measureText(cur).width > maxW && cur.length > 1) { let k = cur.length; while (k > 1 && ctx.measureText(cur.slice(0, k)).width > maxW) k--; lines.push(cur.slice(0, k)); cur = cur.slice(k); }
+  }
+  if (cur) lines.push(cur);
+  let out = lines;
+  if (lines.length > maxLines) { out = lines.slice(0, maxLines); out[maxLines - 1] = out[maxLines - 1].slice(0, -1) + '…'; }
+  WRAP.set(key, out); return out;
+}
+function paper(x, y, w, h, rot, a, doc, size) {
+  if (a <= 0.01) return;
+  ctx.save(); ctx.translate(x, y); if (rot) ctx.rotate(rot); ctx.globalAlpha *= a;
+  rr(-w / 2 + 1.5, -h / 2 + 2.5, w, h, Math.min(5, h / 5)); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+  rr(-w / 2, -h / 2, w, h, Math.min(5, h / 5)); ctx.fillStyle = S.paper; ctx.fill();
+  if (doc && w > 44) {
+    const fs = size || 9, lines = wrap(doc.text, fs, 400, w - 10, Math.max(1, Math.floor((h - 8) / (fs * 1.25))));
+    const lh = fs * 1.25, y0 = -lines.length * lh / 2 + lh / 2;
+    lines.forEach((ln, k) => txt(ln, -w / 2 + 5, y0 + k * lh, { size: fs, color: S.paperInk, base: 'middle' }));
+  }
+  ctx.restore();
+}
+function stripColor(v) { v = clamp(v * 3, -1, 1); return v < 0 ? mix('#1A2B3C', '#4F9BE0', -v) : mix('#1A2B3C', '#F2A541', v); }
+
+let HITS = [];
+
+/* =========================================================
+   5. 장면별 그리기
+   ========================================================= */
+function slipAt(i, t) {
+  if (t < 10.2) {
+    const f0 = 0.15 + FALLK[i] * 0.028; if (t < f0) return null;
+    const p = eo(seg(t, f0, f0 + 0.8));
+    return { x: PILE[i].x, y: lerp(-60, PILE[i].y, p), r: lerp(PILE[i].r * 2.5, PILE[i].r, p), w: 70, h: 44, a: 1 };
+  }
+  const k = GRIDK[i] / N, p = eio(seg(t, 10.2 + k * 0.9, 11.8 + k * 0.9));
+  let x = lerp(PILE[i].x, SLOT[i].x, p), y = lerp(PILE[i].y, SLOT[i].y, p), r = lerp(PILE[i].r, 0, p), w = 70, h = 44, a = 1;
+  if (t >= 21) {
+    if ((i === IA || i === IB || i === IC) && t < 48.4) return null;
+    a = 1 - 0.84 * seg(t, 21, 22.5) + 0.84 * seg(t, 47, 48.4);
+  }
+  if (t >= ST[i]) {
+    const q = seg(t, ST[i], ST[i] + 0.65); if (q >= 1) return null;
+    const e = ei(q); x = lerp(SLOT[i].x, MC.x, e); y = lerp(SLOT[i].y, MC.y, e);
+    const sc = lerp(1, 0.22, e); w *= sc; h *= sc; r = e * 2.4;
+  }
+  return { x, y, r, w, h, a };
+}
+function drawSlips(t) {
+  if (t > 54) return;
+  for (let i = 0; i < N; i++) {
+    const s = slipAt(i, t); if (!s) continue;
+    paper(s.x, s.y, s.w, s.h, s.r, s.a, DOCS[i], 9);
+    if (s.a > 0.5 && s.w > 40) HITS.push({ x: s.x, y: s.y, r: 30, i });
+  }
+}
+
+function drawIntro(t) {
+  if (t > 10.2) return;
+  const a = seg(t, 0.9, 2.0) * (1 - seg(t, 9.0, 10.0)); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  const g = ctx.createRadialGradient(640, 360, 30, 640, 360, 460);
+  g.addColorStop(0, 'rgba(8,18,28,0.95)'); g.addColorStop(0.6, 'rgba(8,18,28,0.75)'); g.addColorStop(1, 'rgba(8,18,28,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const rise = (1 - eo(seg(t, 0.9, 2.3))) * 16;
+  txt('BERTopic', 640, 350 + rise, { size: 108, weight: 800, fam: FD, align: 'center' });
+  txt(STR.introSub, 640, 402 + rise, { size: 25, weight: 500, align: 'center' });
+  txt(STR.introSmall, 640, 442 + rise, { size: 14.5, fam: FM, align: 'center', color: S.muted });
+  ctx.restore();
+}
+
+function drawBadges(t) {
+  if (t < 15 || t > 21.6) return;
+  const out = 1 - seg(t, 20.4, 21.4);
+  STR.badges.forEach((b, i) => {
+    const p = seg(t, 15.3 + i * 1.0, 15.95 + i * 1.0); if (p <= 0) return;
+    const cx = 175 + i * 310, cy = 580, w = 250, h = 74, sc = eback(p);
+    ctx.save(); ctx.globalAlpha = Math.min(1, p * 1.6) * out; ctx.translate(cx, cy); ctx.scale(sc, sc);
+    rr(-w / 2, -h / 2, w, h, 14); ctx.fillStyle = 'rgba(14,33,51,0.95)'; ctx.fill(); ctx.strokeStyle = rgba(S.accent, .45); ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(-w / 2 + 34, 0, 16, 0, Math.PI * 2); ctx.fillStyle = S.accent; ctx.fill();
+    txt(b[0], -w / 2 + 34, 1, { size: 16, weight: 700, color: S.ink, align: 'center', base: 'middle' });
+    txt(b[1], -w / 2 + 62, -6, { size: 19, weight: 700 });
+    txt(b[2], -w / 2 + 62, 17, { size: 13.5, color: S.muted });
+    ctx.restore();
+    if (i > 0) {
+      const ax = cx - w / 2 - 44, a2 = Math.min(1, p * 2) * out;
+      ctx.save(); ctx.globalAlpha = a2; ctx.strokeStyle = S.muted; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(ax + 4, cy); ctx.lineTo(ax + 36, cy); ctx.moveTo(ax + 29, cy - 6); ctx.lineTo(ax + 36, cy); ctx.lineTo(ax + 29, cy + 6); ctx.stroke(); ctx.restore();
+    }
+  });
+}
+
+/* ---------- ① 임베딩 ---------- */
+const CARD = [{ x: 212, y: 236 }, { x: 212, y: 340 }, { x: 212, y: 444 }];
+const DEMO = [IA, IB, IC];
+function drawModel(x, y, a, act, t) {
+  if (a <= 0) return;
+  const w = 130, h = 200;
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.shadowColor = rgba(S.accent, 0.35 * act); ctx.shadowBlur = 30 * act;
+  rr(x - w / 2, y - h / 2, w, h, 16); ctx.fillStyle = '#0F2437'; ctx.fill(); ctx.shadowBlur = 0;
+  ctx.strokeStyle = rgba(S.accent, 0.45 + 0.45 * act); ctx.lineWidth = 1.6; ctx.stroke();
+  txt('BERT', x, y - h / 2 + 36, { size: 26, weight: 700, fam: FD, align: 'center' });
+  const cols = [-34, 0, 34], rows = [-40, -20, 0, 20, 40];
+  ctx.lineWidth = 1;
+  for (let c = 0; c < 2; c++) for (const r1 of rows) for (const r2 of rows) {
+    ctx.strokeStyle = rgba(S.accent, 0.07 + 0.22 * act * (0.5 + 0.5 * Math.sin(t * 9 + r1 * 0.1 + r2 * 0.07 + c)));
+    ctx.beginPath(); ctx.moveTo(x + cols[c], y + 12 + r1); ctx.lineTo(x + cols[c + 1], y + 12 + r2); ctx.stroke();
+  }
+  cols.forEach((cx, c) => rows.forEach((r, k) => {
+    const lit = act * (0.5 + 0.5 * Math.sin(t * 10 - c * 1.4 + k));
+    ctx.beginPath(); ctx.arc(x + cx, y + 12 + r, 3.6, 0, Math.PI * 2); ctx.fillStyle = mix('#35526B', '#BFE4FF', lit); ctx.fill();
+  }));
+  txt(STR.model, x, y + h / 2 - 16, { size: 12, color: S.muted, align: 'center' });
+  ctx.restore();
+}
+function drawStrip(x, y, vec, n, a, outline) {
+  if (a <= 0 || n <= 0) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  if (outline) { rr(x - 7, y - 22, 16 * 24 + 26, 44, 10); ctx.strokeStyle = outline; ctx.lineWidth = 2; ctx.stroke(); }
+  for (let k = 0; k < Math.min(16, n); k++) { rr(x + k * 24, y - 15, 21, 30, 4); ctx.fillStyle = stripColor(vec[k]); ctx.fill(); }
+  if (n >= 16) txt('…', x + 16 * 24 + 2, y + 5, { size: 16, color: S.muted });
+  const nums = vec.slice(0, 4).map(v => (v >= 0 ? ' ' : '') + v.toFixed(2)).join('  ');
+  if (n >= 16) txt(`[${nums}  … ]`, x, y + 33, { size: 11, fam: FM, color: S.muted });
+  ctx.restore();
+}
+function drawEmbed(t) {
+  if (t < 21 || t > 55) return;
+  const cardIn = eio(seg(t, 21.3, 23.3)), cardOut = eio(seg(t, 47, 48.4)), mv = eio(seg(t, 47, 48.5));
+  const mx = lerp(470, MC.x, mv), my = lerp(340, MC.y, mv);
+  const pulses = [[25.2, 26.3], [27.7, 28.8], [30.2, 31.3]];
+  let act = 0; pulses.forEach(([a, b]) => { act = Math.max(act, seg(t, a - 0.2, a) * (1 - seg(t, b - 0.2, b))); });
+  if (t > 48.4 && t < 53.8) act = Math.max(act, 0.85);
+  const labA = cardIn * (1 - cardOut);
+  if (labA > 0) {
+    txt(STR.sent, 62, 186, { size: 13, weight: 600, color: S.muted, alpha: labA });
+    if (t > 25.8) txt(STR.nums, 580, 186, { size: 13, weight: 600, color: S.muted, alpha: labA * seg(t, 25.8, 26.4) });
+  }
+  // 카드 A · B · C
+  DEMO.forEach((di, r) => {
+    const p = cardIn * (1 - cardOut); if (t >= 48.4) return;
+    const x = lerp(SLOT[di].x, CARD[r].x, p), y = lerp(SLOT[di].y, CARD[r].y, p), w = lerp(70, 300, p), h = lerp(44, 76, p);
+    ctx.save(); ctx.translate(x, y);
+    rr(-w / 2 + 2, -h / 2 + 3, w, h, 8); ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fill();
+    rr(-w / 2, -h / 2, w, h, 8); ctx.fillStyle = S.paper; ctx.fill();
+    if (p > 0.6) {
+      const a = seg(p, 0.6, 1);
+      txt('ABC'[r], -w / 2 + 16, -10, { size: 13, weight: 700, color: '#8A7F6C', alpha: a, base: 'middle' });
+      txt(DOCS[di].text, -w / 2 + 34, -10, { size: 16, weight: 600, color: S.paperInk, alpha: a, base: 'middle' });
+      const ca = seg(t, 31.8, 32.6);
+      if (ca > 0) {
+        let cx = -w / 2 + 34;
+        DOCS[di].tokens.forEach(tok => {
+          const ww = tw(tok, 12, 600) + 14;
+          rr(cx, 8, ww, 20, 10); ctx.fillStyle = rgba(r === 2 ? '#4F9BE0' : '#F2A541', 0.28 * ca); ctx.fill();
+          txt(tok, cx + ww / 2, 18.5, { size: 12, weight: 600, color: S.paperInk, align: 'center', base: 'middle', alpha: ca });
+          cx += ww + 6;
+        });
+      }
+    } else paper(0, 0, w, h, 0, 1, DOCS[di], 9);
+    ctx.restore();
+    HITS.push({ x, y, r: Math.max(24, w / 2), i: di });
+  });
+  // 카드가 모델로 들어가는 모습
+  [24.4, 26.9, 29.4].forEach((g0, r) => {
+    const q = seg(t, g0, g0 + 0.9); if (q <= 0 || q >= 1) return;
+    const e = ei(q), x = lerp(CARD[r].x + 150, mx, e), y = lerp(CARD[r].y, my, e), sc = lerp(0.42, 0.12, e);
+    paper(x, y, 300 * sc, 76 * sc, 0, seg(q, 0, 0.15) * (1 - q * 0.6), null);
+  });
+  const mA = seg(t, 22.8, 24) * (1 - seg(t, 53.6, 55));
+  drawModel(mx, my, mA, act, t);
+  // 숫자 띠
+  const outA = 1 - seg(t, 47, 48);
+  [25.9, 28.4, 30.9].forEach((s0, r) => {
+    const n = Math.floor(16.99 * seg(t, s0, s0 + 1.1));
+    const fl = seg(t, s0 - 0.45, s0);
+    if (fl > 0 && fl < 1) { for (let k = 0; k < 4; k++) { const q = clamp(fl * 1.3 - k * 0.1); ctx.beginPath(); ctx.arc(lerp(mx + 65, 580, q), lerp(my, CARD[r].y, q), 3, 0, Math.PI * 2); ctx.fillStyle = rgba(S.accent, 0.8 * outA); ctx.fill(); } }
+    let outline = null;
+    if (t > 37.2 && r < 2) outline = rgba(S.good, 0.85 * seg(t, 37.2, 37.8) * (1 - seg(t, 42.5, 43)));
+    if (t > 42.8 && r !== 1) outline = rgba(S.bad, 0.8 * seg(t, 42.8, 43.4));
+    drawStrip(580, CARD[r].y, VEC[DEMO[r]], n, outA, outline);
+  });
+  // 유사도 미터
+  const meters = [[37.3, 0, 1, S.good], [42.8, 0, 2, S.bad]];
+  meters.forEach(([t0, a, b, col], k) => {
+    const p = seg(t, t0, t0 + 0.6) * outA; if (p <= 0) return;
+    const sim = cosSim(VEC[DEMO[a]], VEC[DEMO[b]]), y = 290 + k * 104, x = 1010;
+    ctx.save(); ctx.globalAlpha *= p;
+    rr(x - 14, y - 34, 250, 82, 12); ctx.fillStyle = S.panel; ctx.fill(); ctx.strokeStyle = rgba(col, 0.5); ctx.lineWidth = 1.2; ctx.stroke();
+    txt(`${'ABC'[a]} ↔ ${'ABC'[b]}`, x, y - 8, { size: 16, weight: 700 });
+    txt(`${STR.sim} ${sim.toFixed(2)}`, x + 222, y - 8, { size: 16, weight: 700, color: col, align: 'right', fam: FB });
+    rr(x, y + 4, 222, 8, 4); ctx.fillStyle = '#1F3549'; ctx.fill();
+    rr(x, y + 4, 222 * clamp(sim) * eo(seg(t, t0 + 0.2, t0 + 1.2)), 8, 4); ctx.fillStyle = col; ctx.fill();
+    const ov = DOCS[DEMO[a]].tokens.filter(w => DOCS[DEMO[b]].tokens.includes(w)).length;
+    txt(`${STR.overlap} ${ov}${STR.docsN} · ${STR.ex}`, x, y + 32, { size: 12, color: S.muted });
+    ctx.restore();
+  });
+}
+
+/* ---------- ② UMAP ---------- */
+function drawAxes(t) {
+  if (t < 54.5 || t > 68) return;
+  const a = seg(t, 54.5, 56.5) * (1 - seg(t, 62, 67)); if (a <= 0) return;
+  const rot = 0.05 * (t - 55);
+  ctx.save(); ctx.globalAlpha = a;
+  AXES.forEach((ax, k) => {
+    const an = ax.a + rot, x2 = MC.x + Math.cos(an) * ax.len, y2 = 392 + Math.sin(an) * ax.len * 0.62;
+    ctx.strokeStyle = rgba(S.accent, 0.05 + ax.w * 0.08); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(MC.x, 392); ctx.lineTo(x2, y2); ctx.stroke();
+    if (k < STR.axis.length) txt(STR.axis[k], x2 + Math.cos(an) * 8, y2 + Math.sin(an) * 8, { size: 11.5, color: S.muted, align: Math.cos(an) < 0 ? 'right' : 'left', base: 'middle' });
+  });
+  ctx.restore();
+}
+function drawDims(t) {
+  if (t < 55.3 || t > 85) return;
+  const a = seg(t, 55.3, 56.3) * (1 - seg(t, 83.4, 84.4));
+  const n = t < 62 ? 384 : t < 72 ? Math.round(2 + 382 * Math.pow(1 - eio(seg(t, 62, 72)), 2)) : 2;
+  ctx.save(); ctx.globalAlpha = a;
+  txt(STR.dims, 1234, 72, { size: 18, weight: 600, align: 'right', color: S.muted });
+  const dw = tw(STR.dims, 18, 600);
+  txt(String(n), 1234 - dw - 8, 74, { size: 48, weight: 800, fam: FD, align: 'right' });
+  if (t > 74) txt(STR.dimNote, 1234, 100, { size: 13, color: S.muted, align: 'right', alpha: seg(t, 74, 75) });
+  if (t > 58.5 && t < 80.5) txt(STR.neighbors, 1234, t > 74 ? 122 : 100, { size: 12.5, color: S.accent, align: 'right', alpha: seg(t, 58.5, 59.5) * (1 - seg(t, 79.5, 80.5)) });
+  ctx.restore();
+}
+function drawGraticule(t) {
+  if (t < 71 || t > 190) return;
+  const v = viewAt(t); if (v.s < 120) return;
+  const a = seg(t, 71, 75) * (1 - seg(t, 188, 190)) * (t > 90 ? 0.7 : 1);
+  ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = 'rgba(124,196,242,0.08)'; ctx.lineWidth = 1;
+  for (let x = -1.6; x <= 1.601; x += 0.2) { const [sx] = toS(x, 0, v); ctx.beginPath(); ctx.moveTo(sx, v.cy + YMIN * v.s); ctx.lineTo(sx, v.cy + YMAX * v.s); ctx.stroke(); }
+  for (let y = -0.8; y <= 0.801; y += 0.2) { const [, sy] = toS(0, y, v); ctx.beginPath(); ctx.moveTo(v.cx + XMIN * v.s, sy); ctx.lineTo(v.cx + XMAX * v.s, sy); ctx.stroke(); }
+  txt(STR.umapAx[0], v.cx + XMAX * v.s, v.cy + YMAX * v.s + 16, { size: 11, color: S.faint, align: 'right' });
+  ctx.save(); ctx.translate(v.cx + XMIN * v.s - 10, v.cy + YMIN * v.s); ctx.rotate(-Math.PI / 2);
+  txt(STR.umapAx[1], 0, 0, { size: 11, color: S.faint, align: 'right' }); ctx.restore();
+  ctx.restore();
+}
+function drawEdges(t) {
+  const P = pointsAt(t); if (!P) return;
+  let a = 0.42 * seg(t, 58, 60.5) * (1 - seg(t, 80, 83));
+  if (showEdges && t >= 55 && t < 124) a = Math.max(a, 0.42);
+  if (a <= 0) return;
+  ctx.save(); ctx.strokeStyle = rgba(S.accent, a); ctx.lineWidth = 1.1;
+  ctx.beginPath();
+  for (const [i, j] of EDGES) { if (!P[i].vis || !P[j].vis) continue; ctx.moveTo(P[i].x, P[i].y); ctx.lineTo(P[j].x, P[j].y); }
+  ctx.stroke(); ctx.restore();
+}
+
+/* ---------- ③ HDBSCAN ---------- */
+function drawGlows(t) {
+  if (t < 85 || t > 97) return;
+  const g = seg(t, 85.5, 89) * (1 - seg(t, 92.5, 96.5)); if (g <= 0) return;
+  const P = pointsAt(t);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  P.forEach(p => { const rad = 34 * g; const gr = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad); gr.addColorStop(0, rgba('#6FB7E8', 0.16 * g)); gr.addColorStop(1, 'rgba(111,183,232,0)'); ctx.fillStyle = gr; ctx.fillRect(p.x - rad, p.y - rad, rad * 2, rad * 2); });
+  ctx.restore();
+}
+function drawTerrain(t) {
+  if (t < 90 || t > 190) return;
+  const a = seg(t, 90, 93) * (1 - seg(t, 188, 190)); if (a <= 0) return;
+  const m = labelsAt(t), own = owners(m); own._m = m;
+  const inf = info(m), fk = focusTopic(inf);
+  const dim = t > 124 && t < 160 ? seg(t, 124.5, 126) * (1 - seg(t, 157, 159)) : 0;
+  paintTerrain(waterAt(t), t >= 97.2 ? 1 : 0, own, fk, dim);
+  const v = viewAt(t);
+  ctx.save(); ctx.globalAlpha = a; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(tcv, v.cx + XMIN * v.s, v.cy + YMIN * v.s, (XMAX - XMIN) * v.s, (YMAX - YMIN) * v.s);
+  ctx.restore();
+}
+function pointStyle(i, t) {
+  if (t < 97.2) return { c: S.point, ring: false };
+  const m = labelsAt(t), L = getLabels(m), l = L[i];
+  if (l < 0) return { c: t >= 103 ? '#8FA0B0' : S.point, ring: t >= 103 };
+  const revealed = t >= 103 || waterAt(t) <= DENSP[i] + 0.02;
+  return { c: revealed ? tc(l) : S.point, ring: false };
+}
+function drawPoints(t) {
+  const P = pointsAt(t); if (!P) return;
+  const fade = 1 - seg(t, 188, 190); if (fade <= 0) return;
+  const inf = info(labelsAt(t)), fk = focusTopic(inf), L = inf.L;
+  const focusDim = t > 124.5 && t < 160 ? seg(t, 124.5, 126) * (1 - seg(t, 157, 159)) : 0;
+  const v = viewAt(t), small = v.s < 120;
+  const ord = t < 72 ? P.map((p, i) => i).sort((a, b) => P[b].z - P[a].z) : P.map((p, i) => i);
+  ctx.save();
+  for (const i of ord) {
+    const p = P[i]; if (!p.vis) continue;
+    const st = pointStyle(i, t);
+    let a = fade * (t < 72 ? clamp(0.85 - p.z * 1.3, 0.35, 1) : 1);
+    if (focusDim > 0 && L[i] !== fk) a *= 1 - focusDim * 0.8;
+    const r = (small ? 2.2 : v.s < 250 ? 4.2 : 5.2) * p.f;
+    ctx.globalAlpha = a;
+    if (st.c !== S.point && !small) { ctx.beginPath(); ctx.arc(p.x, p.y, r + 3, 0, Math.PI * 2); ctx.fillStyle = rgba(st.c, 0.25); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fillStyle = st.c; ctx.fill();
+    ctx.strokeStyle = 'rgba(8,19,29,0.75)'; ctx.lineWidth = 1; ctx.stroke();
+    if (st.ring && t < 112 && !small) {
+      const pr = (t - 103) * 2.2 % 1;
+      ctx.beginPath(); ctx.arc(p.x, p.y, r + 4 + pr * 10, 0, Math.PI * 2); ctx.strokeStyle = rgba('#C9D6E2', 0.7 * (1 - pr) * (1 - seg(t, 110, 112))); ctx.lineWidth = 1.4; ctx.stroke();
+      txt('-1', p.x + r + 5, p.y - r - 3, { size: 11, weight: 600, color: '#C9D6E2', alpha: 1 - seg(t, 110, 112) });
+    }
+    if (!small && a > 0.4) HITS.push({ x: p.x, y: p.y, r: 9, i });
+  }
+  ctx.restore();
+}
+function drawTopicLabels(t) {
+  if (t < 110 || t > 190) return;
+  const v = viewAt(t); if (v.s < 120) return;
+  const inName = t >= 160;
+  let a = inName ? seg(t, 161, 163) : seg(t, 110, 111) * (1 - seg(t, 124.5, 125.5));
+  a *= 1 - seg(t, 188, 189.5); if (a <= 0) return;
+  const inf = info(labelsAt(t));
+  ctx.save(); ctx.globalAlpha = a;
+  inf.topics.forEach((tp, n) => {
+    if (tp.k < 0) return;
+    const pa = inName ? seg(t, 161 + n * 0.45, 161.6 + n * 0.45) : 1; if (pa <= 0) return;
+    const [x, y] = toS(tp.cx, tp.top, v);
+    const lbl = inName ? tp.name : `${STR.topic} ${tp.k} · ${tp.n}${STR.docsN}`;
+    ctx.save(); ctx.globalAlpha *= pa;
+    pill(lbl, x, y - 20 - (1 - eo(pa)) * 8, { size: v.s < 250 ? 11.5 : 13, weight: 700, fg: mix(tc(tp.k), '#FFFFFF', 0.45), bg: 'rgba(8,18,28,0.86)', stroke: rgba(tc(tp.k), 0.8) });
+    ctx.restore();
+  });
+  ctx.restore();
+}
+function drawClusterBadges(t) {
+  if (t < 110 || t > 124.5) return;
+  const a = seg(t, 110, 111) * (1 - seg(t, 123.6, 124.4));
+  const m = labelsAt(t), inf = info(m);
+  ctx.save(); ctx.globalAlpha = a;
+  pill(`${STR.topic} ${inf.K}${STR.docsN} ${STR.found}  ·  ${STR.outlier} ${inf.noise}${STR.docsN}`, 1236, 64, { size: 15, weight: 700, align: 'right', h: 34, bg: S.panel, stroke: rgba(S.accent, .4) });
+  if (t > 117) {
+    const b = seg(t, 117, 117.6);
+    ctx.globalAlpha = a * b;
+    pill(`min_cluster_size = ${m}`, 1236, 106, { size: 15, weight: 500, fam: FM, align: 'right', h: 32, bg: S.panel, stroke: m !== userMcs ? rgba('#F5C343', .9) : rgba(S.accent, .4), fg: m !== userMcs ? '#F5C343' : S.text });
+    txt(STR.minSize, 1236, 138, { size: 12.5, color: S.muted, align: 'right' });
+  }
+  ctx.restore();
+}
+
+/* ---------- ④ c-TF-IDF ---------- */
+const BD = { x: 56, y: 112, w: 384, h: 548 };
+const ROWY0 = 186, ROWH = 48, BARX = 610;
+const segCache = new Map();
+function docSegs(di) {
+  if (segCache.has(di)) return segCache.get(di);
+  const d = DOCS[di], out = []; let pos = 0;
+  ctx.font = fnt(13, 400);
+  for (const tok of d.tokens) {
+    const j = d.text.indexOf(tok, pos); if (j < 0) continue;
+    if (j > pos) out.push({ s: d.text.slice(pos, j), tok: false });
+    out.push({ s: tok, tok: true }); pos = j + tok.length;
+  }
+  if (pos < d.text.length) out.push({ s: d.text.slice(pos), tok: false });
+  let x = 0; out.forEach(o => { o.x = x; o.w = ctx.measureText(o.s).width; x += o.w; });
+  const res = { segs: out, w: x }; segCache.set(di, res); return res;
+}
+let rowsCache = { key: '', v: null };
+function ctfRows(inf, fk) {
+  const key = inf.m + ':' + fk; if (rowsCache.key === key) return rowsCache.v;
+  const arr = (inf.ct.out[fk] || []).map(o => ({ ...o }));
+  let rows = arr.slice(0, 6);
+  for (const cw of ['오늘', '정말']) { const o = arr.find(r => r.w === cw); if (o && !rows.find(r => r.w === cw)) rows.push(o); }
+  for (const o of arr) { if (rows.length >= 8) break; if (!rows.find(r => r.w === o.w)) rows.push(o); }
+  const classes = [...inf.topics.filter(tp => tp.k >= 0).map(tp => tp.k), ...(inf.byK[-1] ? [-1] : [])];
+  rows.forEach(r => { r.pres = classes.map(k => ({ k, on: !!(inf.ct.tf[k] && inf.ct.tf[k][r.w]) })); r.nPres = r.pres.filter(p => p.on).length; });
+  const byTf = rows.slice().sort((a, b) => b.tf - a.tf || b.f - a.f), bySc = rows.slice().sort((a, b) => b.score - a.score);
+  rows.forEach(r => { r.i0 = byTf.indexOf(r); r.i1 = bySc.indexOf(r); r.common = r.nPres >= Math.max(3, Math.ceil(classes.length * 0.6)); });
+  const maxTf = Math.max(...rows.map(r => r.tf)), idfMax = Math.max(...rows.map(r => r.idf));
+  const idx = inf.byK[fk].idx, lines = idx.slice(0, 21);
+  const occ = {};
+  lines.forEach((di, j) => { docSegs(di).segs.forEach(sg => { if (sg.tok) (occ[sg.s] = occ[sg.s] || []).push({ j, x: sg.x + sg.w / 2 }); }); });
+  const v = { rows, maxTf, idfMax, unit: Math.min(64, 300 / maxTf), lines, more: idx.length - lines.length, occ, classes, top4: bySc.slice(0, 4).map(r => r.w) };
+  rowsCache = { key, v }; return v;
+}
+function drawCtf(t) {
+  if (t < 124 || t > 160) return;
+  const inf = info(userMcs), fk = focusTopic(inf); if (fk === null) return;
+  const R = ctfRows(inf, fk), col = tc(fk), dark = mix(col, '#1B1B1B', 0.45);
+  const out = 1 - seg(t, 157, 159.5);
+  // 미니 지도 테두리
+  const mm = seg(t, 128.5, 130.5) * out;
+  if (mm > 0) {
+    ctx.save(); ctx.globalAlpha = mm;
+    rr(V_MINI.cx + XMIN * V_MINI.s - 8, V_MINI.cy + YMIN * V_MINI.s - 8, (XMAX - XMIN) * V_MINI.s + 16, (YMAX - YMIN) * V_MINI.s + 16, 10);
+    ctx.strokeStyle = rgba(S.accent, 0.35); ctx.lineWidth = 1; ctx.stroke();
+    txt(STR.mini, V_MINI.cx + XMIN * V_MINI.s - 4, V_MINI.cy + YMAX * V_MINI.s + 24, { size: 11, color: S.muted });
+    ctx.restore();
+  }
+  // 큰 문서
+  const bdA = seg(t, 125.6, 126.6) * out;
+  if (bdA > 0) {
+    ctx.save(); ctx.globalAlpha = bdA;
+    const sc = lerp(0.96, 1, eo(seg(t, 125.6, 126.6)));
+    ctx.translate(BD.x + BD.w / 2, BD.y + BD.h / 2); ctx.scale(sc, sc); ctx.translate(-(BD.x + BD.w / 2), -(BD.y + BD.h / 2));
+    rr(BD.x + 3, BD.y + 5, BD.w, BD.h, 10); ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fill();
+    rr(BD.x, BD.y, BD.w, BD.h, 10); ctx.fillStyle = S.paper; ctx.fill();
+    ctx.fillStyle = col; ctx.fillRect(BD.x, BD.y + 18, 5, 34);
+    txt(`${STR.topic} ${fk}${STR.bigDoc}`, BD.x + 20, BD.y + 36, { size: 18, weight: 700, color: S.paperInk });
+    txt(`${inf.byK[fk].n}${STR.docsN} ${STR.merged}`, BD.x + 20, BD.y + 56, { size: 12, color: '#6B645A' });
+    R.lines.forEach((di, j) => {
+      const land = 126.2 + j * 0.1 + 0.85, la = seg(t, land, land + 0.2); if (la <= 0) return;
+      const y = BD.y + 84 + j * 21, ds = docSegs(di);
+      ds.segs.forEach(sg => {
+        if (sg.tok) { rr(BD.x + 20 + sg.x - 2, y - 9, sg.w + 4, 18, 4); ctx.fillStyle = rgba(col, 0.3 * la); ctx.fill(); }
+        txt(sg.s, BD.x + 20 + sg.x, y, { size: 13, weight: sg.tok ? 600 : 400, color: sg.tok ? dark : S.paperInk, base: 'middle', alpha: la });
+      });
+    });
+    if (R.more > 0 && t > 129) txt(`… ${STR.more} ${R.more}${STR.docsN}`, BD.x + 20, BD.y + 84 + R.lines.length * 21, { size: 12, color: '#6B645A', base: 'middle' });
+    ctx.restore();
+  }
+  // 섬에서 문서가 날아오는 모습
+  R.lines.forEach((di, j) => {
+    const d0 = 126.2 + j * 0.1, q = seg(t, d0, d0 + 0.95); if (q <= 0 || q >= 1) return;
+    const v0 = viewAt(d0), [sx, sy] = toS(DOCS[di].x, DOCS[di].y, v0), ds = docSegs(di);
+    const e = eio(q), ex = BD.x + 20 + ds.w / 2, ey = BD.y + 84 + j * 21;
+    paper(lerp(sx, ex, e), lerp(sy, ey, e), lerp(12, ds.w + 12, e), lerp(9, 20, e), (1 - e) * 0.5, 1 - seg(q, 0.8, 1), null);
+  });
+  // 막대 그래프
+  const chartA = out;
+  const pI = eio(seg(t, 143.5, 145.5)), pS = eio(seg(t, 146, 148.3));
+  const hdr = t < 136 ? STR.ph1 : t < 142 ? STR.ph2 : t < 149 ? STR.ph3 : STR.ph4;
+  const hA = seg(t, 130, 130.6) * chartA * (t < 136 ? 1 : 1);
+  if (hA > 0) {
+    txt(hdr, 470, 132, { size: 22, weight: 700, fam: FD, alpha: hA });
+    txt(STR.colWord, 596, 162, { size: 12, color: S.muted, align: 'right', alpha: hA });
+    txt(t < 143.5 ? STR.colTf : STR.colTfIdf, BARX, 162, { size: 12, color: S.muted, alpha: hA });
+    if (t > 136.4) txt(STR.colPres, 1100, 162, { size: 12, color: S.muted, alpha: hA * seg(t, 136.4, 137) });
+  }
+  R.rows.forEach((r, ri) => {
+    const ra = seg(t, 130.4 + r.i0 * 0.3, 130.8 + r.i0 * 0.3) * chartA; if (ra <= 0) return;
+    const y = lerp(ROWY0 + r.i0 * ROWH, ROWY0 + r.i1 * ROWH, pS);
+    const grey = r.common ? seg(t, 137.2, 138) : 0;
+    const top = t > 151 && r.i1 < 4 ? seg(t, 151, 152) * (1 - seg(t, 157, 158)) : 0;
+    ctx.save(); ctx.globalAlpha *= ra;
+    if (top > 0) { rr(470, y - 20, 760, 40, 10); ctx.fillStyle = rgba(col, 0.12 * top); ctx.fill(); ctx.strokeStyle = rgba(col, 0.6 * top); ctx.lineWidth = 1.2; ctx.stroke(); }
+    if (r.common && t > 137 && t < 149) { const oa = seg(t, 137.2, 137.8) * (1 - seg(t, 148, 149)); rr(474, y - 19, 752, 38, 9); ctx.setLineDash([5, 4]); ctx.strokeStyle = rgba('#FFB4A8', 0.8 * oa); ctx.lineWidth = 1.3; ctx.stroke(); ctx.setLineDash([]); }
+    txt(r.w, 596, y, { size: 18, weight: 700, align: 'right', base: 'middle', color: grey > 0 && pI > 0.5 ? mix(S.text, S.muted, grey) : S.text });
+    // 도착한 칩 수만큼 막대가 자람
+    let cnt = 0; for (let c = 0; c < r.tf; c++) { const d0 = 130.6 + r.i0 * 0.3 + c * 0.15; cnt += seg(t, d0 + 0.45, d0 + 0.55); }
+    const len = R.unit * cnt * lerp(1, r.idf / R.idfMax, pI);
+    const barCol = mix(col, '#5E7082', grey * 0.85);
+    rr(BARX, y - 11, Math.max(2, len), 22, 5); ctx.fillStyle = barCol; ctx.fill();
+    if (cnt > 0.05) {
+      const label = t < 143 ? String(Math.round(cnt)) : `${r.tf} × ${r.idf.toFixed(2)}` + (t > 145.2 ? ` = ${r.score.toFixed(1)}` : '');
+      txt(label, BARX + len + 10, y + 1, { size: 14, weight: 600, fam: t < 143 ? FB : FM, base: 'middle', color: S.text });
+    }
+    if (t > 136.4) {
+      const pa = seg(t, 136.4 + r.i0 * 0.08, 136.9 + r.i0 * 0.08);
+      r.pres.forEach((p, k) => {
+        const x = 1106 + k * 19; ctx.beginPath(); ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+        if (p.on) { ctx.fillStyle = rgba(tc(p.k), pa); ctx.fill(); } else { ctx.strokeStyle = rgba('#4E6478', pa); ctx.lineWidth = 1.2; ctx.stroke(); }
+      });
+    }
+    ctx.restore();
+    // 날아가는 단어 칩
+    for (let c = 0; c < r.tf; c++) {
+      const d0 = 130.6 + r.i0 * 0.3 + c * 0.15, q = seg(t, d0, d0 + 0.55); if (q <= 0 || q >= 1) continue;
+      const oc = (R.occ[r.w] || [])[c]; if (!oc) continue;
+      const sx = BD.x + 20 + oc.x, sy = BD.y + 84 + oc.j * 21, ex = BARX + R.unit * (c + 0.5), ey = ROWY0 + r.i0 * ROWH, e = eio(q);
+      const x = lerp(sx, ex, e), y = lerp(sy, ey, e) - Math.sin(e * Math.PI) * 40;
+      pill(r.w, x, y, { size: 12, weight: 700, fg: S.ink, bg: col, h: 20, padX: 7 });
+    }
+  });
+  // IDF 배수
+  if (t > 143 && t < 158) {
+    R.rows.forEach(r => {
+      const a = seg(t, 143 + r.i0 * 0.06, 143.5 + r.i0 * 0.06) * (1 - seg(t, 145.1, 145.4)) * chartA; if (a <= 0) return;
+      const y = ROWY0 + r.i0 * ROWH;
+      pill(`× ${r.idf.toFixed(2)}`, 1050, y, { size: 13, weight: 600, fam: FM, h: 24, bg: r.common ? 'rgba(255,142,142,0.2)' : 'rgba(124,196,242,0.16)', fg: r.common ? '#FFB4A8' : S.accent, alpha: a });
+    });
+  }
+  // 공식 · 이름표
+  const fA = seg(t, 149.4, 150.2) * chartA;
+  if (fA > 0) {
+    ctx.save(); ctx.globalAlpha = fA;
+    rr(470, 560, 760, 70, 12); ctx.fillStyle = S.panel; ctx.fill(); ctx.strokeStyle = rgba(S.accent, 0.35); ctx.lineWidth = 1; ctx.stroke();
+    txt(STR.f1, 490, 590, { size: 17, weight: 600 });
+    txt(`${STR.f2} (${inf.ct.A.toFixed(1)}${STR.docsN})`, 490, 614, { size: 12.5, color: S.muted });
+    ctx.restore();
+  }
+  const nA = seg(t, 151.5, 152.3) * chartA;
+  if (nA > 0) {
+    ctx.save(); ctx.globalAlpha = nA;
+    txt(STR.nameTag, 850, 672, { size: 13, color: S.muted, align: 'right', base: 'middle' });
+    pill(`${fk}_${R.top4.join('_')}`, 862, 672, { size: 19, weight: 700, align: 'left', h: 38, fg: S.ink, bg: col });
+    ctx.restore();
+  }
+}
+
+/* ---------- 결과 ---------- */
+function predict(text, inf) {
+  const vocab = [...new Set(DOCS.flatMap(d => d.tokens))].sort((a, b) => b.length - a.length);
+  let s = text; const found = [];
+  for (const w of vocab) if (s.includes(w)) { found.push(w); s = s.split(w).join(' '); }
+  let best = -1, bv = 0;
+  inf.topics.forEach(tp => {
+    if (tp.k < 0) return;
+    const sc = found.reduce((acc, w) => { const o = (inf.ct.out[tp.k] || []).find(o => o.w === w); return acc + (o ? o.score : 0); }, 0);
+    if (sc > bv) { bv = sc; best = tp.k; }
+  });
+  return { topic: best, found };
+}
+const SEA = [[0.06, -0.08], [-0.3, -0.1], [0.62, 0.6], [-1.3, -0.75], [0.95, -0.78], [0.2, 0.82]];
+function placeFor(topic, text, inf) {
+  let h = 7; for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const r1 = (h % 997) / 997, r2 = ((h >>> 10) % 991) / 991;
+  if (topic < 0 || !inf.byK[topic]) return SEA[h % SEA.length];
+  const tp = inf.byK[topic]; return [tp.cx + (r1 - 0.5) * 0.18, tp.cy + (r2 - 0.5) * 0.14];
+}
+function drawResult(t) {
+  if (t < 170 || t > 190) return;
+  const inf = info(userMcs), out = 1 - seg(t, 188, 189.5);
+  const tA = seg(t, 171, 171.8) * out;
+  if (tA > 0) {
+    ctx.save(); ctx.globalAlpha = tA;
+    txt(STR.table, 752, 124, { size: 14, fam: FM, color: S.accent });
+    const cols = [770, 846, 1004];
+    txt('Topic', cols[0], 160, { size: 12, weight: 600, color: S.muted });
+    txt('Count', cols[1], 160, { size: 12, weight: 600, color: S.muted });
+    txt('Name', cols[2], 160, { size: 12, weight: 600, color: S.muted });
+    ctx.fillStyle = S.line; ctx.fillRect(752, 170, 484, 1);
+    const order = [...inf.topics.filter(tp => tp.k < 0), ...inf.topics.filter(tp => tp.k >= 0)];
+    const maxN = Math.max(...order.map(tp => tp.n));
+    const hl = demoPred(inf).topic;
+    order.forEach((tp, r) => {
+      const ra = seg(t, 171.6 + r * 0.28, 172.1 + r * 0.28); if (ra <= 0) return;
+      const y = 194 + r * 40;
+      ctx.save(); ctx.globalAlpha *= ra;
+      if (tp.k === hl && t > 185.4) { rr(752, y - 18, 484, 36, 8); ctx.fillStyle = rgba(tc(tp.k), 0.16 * seg(t, 185.4, 186)); ctx.fill(); }
+      ctx.beginPath(); ctx.arc(cols[0] + 5, y, 5, 0, Math.PI * 2); ctx.fillStyle = tc(tp.k); ctx.fill();
+      txt(String(tp.k), cols[0] + 18, y + 1, { size: 15, weight: 700, fam: FM, base: 'middle' });
+      rr(cols[1], y - 6, 90 * (tp.n / maxN) * eo(ra), 12, 3); ctx.fillStyle = rgba(tc(tp.k), 0.85); ctx.fill();
+      txt(String(tp.n), cols[1] + 98, y + 1, { size: 14, weight: 600, fam: FM, base: 'middle' });
+      txt(tp.name, cols[2], y + 1, { size: 14, weight: 600, base: 'middle', color: tp.k < 0 ? S.muted : S.text });
+      ctx.restore();
+    });
+    ctx.restore();
+  }
+  const v = viewAt(t);
+  // 영상 속 새 문서 예시
+  if (t > 182 && t < 190) {
+    const pr = demoPred(inf), [lx, ly] = toS(pr.x, pr.y, v);
+    const a1 = seg(t, 182, 182.5) * out, drop = eo(seg(t, 182, 182.9));
+    const shrink = eio(seg(t, 183.4, 184.1)), fly = eio(seg(t, 184.1, 185.4));
+    const sx = 372, sy = lerp(96, 132, drop);
+    if (shrink < 1) {
+      const w = lerp(250, 14, shrink), h = lerp(36, 14, shrink);
+      ctx.save(); ctx.globalAlpha = a1; paper(sx, sy, w, h, 0, 1, null);
+      if (shrink < 0.3) { txt(STR.newDoc, sx, sy + 1, { size: 14, weight: 600, color: S.paperInk, align: 'center', base: 'middle', alpha: 1 - shrink / 0.3 }); txt(STR.newLbl, sx - w / 2, sy - h / 2 - 8, { size: 11, weight: 600, color: S.accent, alpha: 1 - shrink / 0.3 }); }
+      ctx.restore();
+    } else {
+      const x = lerp(sx, lx, fly), y = lerp(sy, ly, fly) - Math.sin(fly * Math.PI) * 60;
+      ctx.save(); ctx.globalAlpha = out;
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, Math.PI * 2); ctx.fillStyle = fly >= 1 ? tc(pr.topic) : '#FFFFFF'; ctx.fill();
+      ctx.strokeStyle = '#08131D'; ctx.lineWidth = 1.2; ctx.stroke();
+      if (fly >= 1) {
+        const pp = (t - 185.4) * 1.4 % 1;
+        ctx.beginPath(); ctx.arc(x, y, 8 + pp * 16, 0, Math.PI * 2); ctx.strokeStyle = rgba(tc(pr.topic), 0.9 * (1 - pp)); ctx.lineWidth = 2; ctx.stroke();
+        pill(`${STR.arrow} ${pr.topic < 0 ? STR.outlier + ' -1' : STR.topic + ' ' + pr.topic}`, x + 14, y + 22, { size: 13, weight: 700, align: 'left', fg: S.ink, bg: tc(pr.topic), alpha: seg(t, 185.4, 185.8) });
+      }
+      ctx.restore();
+      HITS.push({ x, y, r: 10, i: -1, text: STR.newDoc, topic: pr.topic });
+    }
+  }
+  // 직접 넣은 문서
+  if (USERDOCS.length && t >= 170) {
+    USERDOCS.forEach((u, n) => {
+      const [x, y] = toS(u.x, u.y, v), c = tc(u.topic);
+      ctx.save(); ctx.globalAlpha = out;
+      const pp = ((t * 1.2) + n * 0.3) % 1;
+      ctx.beginPath(); ctx.arc(x, y, 8 + pp * 14, 0, Math.PI * 2); ctx.strokeStyle = rgba(c, 0.8 * (1 - pp)); ctx.lineWidth = 1.6; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x + 7, y); ctx.lineTo(x, y + 8); ctx.lineTo(x - 7, y); ctx.closePath(); ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.restore();
+      HITS.push({ x, y, r: 11, i: -1, text: u.text, topic: u.topic, user: true });
+    });
+  }
+}
+let demoCache = { m: -1, v: null };
+function demoPred(inf) {
+  if (demoCache.m === inf.m) return demoCache.v;
+  const p = predict(STR.newDoc, inf), [x, y] = placeFor(p.topic, STR.newDoc, inf);
+  demoCache = { m: inf.m, v: { ...p, x, y } }; return demoCache.v;
+}
+
+/* ---------- 레고 블록 ---------- */
+function blockState(b, t) {
+  if (b.opt) { if (t < b.sw) return 0; if (t < b.sw2) return 1; return 2; }
+  return t >= b.sw && t < REVERT ? 1 : 0;
+}
+function drawLego(t) {
+  if (t < 188 || t > 209) return;
+  const out = 1 - seg(t, 207.4, 208.4);
+  const inf = info(userMcs), t0 = inf.byK[0];
+  BLOCKS.forEach((b, i) => {
+    const p = seg(t, 188.6 + i * 0.75, 189.4 + i * 0.75); if (p <= 0) return;
+    const x = 100, w = 520, h = 60, y = lerp(60, 128 + i * 74, eback(p)) ;
+    const stNow = blockState(b, t);
+    let swT = stNow === 0 && b.opt ? -1 : b.opt ? (stNow === 1 ? b.sw : b.sw2) : (stNow === 1 ? b.sw : (t >= REVERT ? REVERT : -1));
+    if (!b.b) swT = -1;
+    const q = swT > 0 ? seg(t, swT, swT + 0.6) : 1;
+    const lift = swT > 0 ? Math.sin(q * Math.PI) * 8 : 0;
+    const optOff = b.opt && stNow === 0;
+    ctx.save(); ctx.globalAlpha = Math.min(1, p * 1.5) * out; ctx.translate(0, -lift);
+    for (let k = 0; k < 5; k++) { rr(x + 40 + k * 96, y - 7, 40, 10, 4); ctx.fillStyle = optOff ? 'rgba(255,111,168,0.25)' : mix(b.col, '#FFFFFF', 0.12); ctx.fill(); }
+    rr(x, y, w, h, 9);
+    if (optOff) { ctx.fillStyle = 'rgba(255,111,168,0.08)'; ctx.fill(); ctx.setLineDash([6, 5]); ctx.strokeStyle = rgba(b.col, 0.8); ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]); }
+    else { ctx.fillStyle = b.col; ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(x + 8, y + 4, w - 16, 2); }
+    const ink = optOff ? b.col : S.ink;
+    txt(b.step, x + 22, y + h / 2 + 1, { size: 18, weight: 700, color: ink, base: 'middle' });
+    const labels = [b.a, b.b, b.c];
+    const cur = labels[stNow], prev = labels[stNow === 0 ? (t >= REVERT && !b.opt ? 1 : 0) : stNow - 1];
+    ctx.save(); rr(x + 170, y + 4, w - 180, h - 8, 6); ctx.clip();
+    if (q < 1 && prev && prev !== cur) txt(prev, x + w - 22 + q * 140, y + h / 2 + 1, { size: 17, weight: 600, color: ink, align: 'right', base: 'middle', alpha: 1 - q });
+    txt(cur, x + w - 22 - (1 - eo(q)) * 60, y + h / 2 + 1, { size: 17, weight: 600, color: ink, align: 'right', base: 'middle', alpha: q });
+    ctx.restore();
+    if (swT > 0 && q < 1) { rr(x - 3, y - 3, w + 6, h + 6, 11); ctx.strokeStyle = rgba('#FFFFFF', 0.7 * (1 - q)); ctx.lineWidth = 2; ctx.stroke(); }
+    ctx.restore();
+  });
+  // 코드 패널
+  const cA = seg(t, 190.5, 191.5) * out;
+  if (cA > 0) {
+    ctx.save(); ctx.globalAlpha = cA;
+    rr(680, 120, 556, 400, 12); ctx.fillStyle = '#07111A'; ctx.fill(); ctx.strokeStyle = S.line; ctx.lineWidth = 1; ctx.stroke();
+    let y = 158;
+    txt('topic_model = BERTopic(', 702, y, { size: 14, fam: FM, color: S.text }); y += 44;
+    BLOCKS.forEach(b => {
+      const stNow = blockState(b, t), val = [b.va, b.vb, b.vc][stNow];
+      const changed = stNow > 0;
+      if (changed) { rr(694, y - 17, 528, 26, 5); ctx.fillStyle = rgba(b.col, 0.16); ctx.fill(); ctx.fillStyle = b.col; ctx.fillRect(694, y - 17, 3, 26); }
+      txt(`    ${b.p}=`, 702, y, { size: 13, fam: FM, color: S.muted });
+      txt(val + ',', 702 + tw(`    ${b.p}=`, 13, 400, FM), y, { size: 13, fam: FM, color: changed ? mix(b.col, '#FFFFFF', 0.3) : S.text });
+      y += 48;
+    });
+    txt(')', 702, y - 8, { size: 14, fam: FM, color: S.text });
+    ctx.restore();
+  }
+  // 토픽 이름 다듬기
+  const lA = seg(t, 202.2, 203) * out;
+  if (lA > 0 && t0) {
+    ctx.save(); ctx.globalAlpha = lA;
+    rr(680, 540, 556, 120, 12); ctx.fillStyle = S.panel; ctx.fill(); ctx.strokeStyle = rgba('#FF6FA8', 0.45); ctx.lineWidth = 1.2; ctx.stroke();
+    txt(STR.legoTitle, 700, 568, { size: 13, weight: 600, color: '#FF9CC4' });
+    if (t < 204.6) {
+      txt(t0.name, 700, 604, { size: 20, weight: 700, color: S.text });
+      txt(STR.legoKb, 700, 638, { size: 12.5, color: S.muted });
+    } else {
+      const q = seg(t, 204.6, 205.4);
+      txt(`${STR.legoBefore}  ${t0.name}`, 700, 598, { size: 13, color: S.muted });
+      ctx.fillStyle = rgba(S.muted, 0.7); ctx.fillRect(700 + tw(STR.legoBefore + '  ', 13), 594, tw(t0.name, 13) * q, 1.2);
+      txt(`${STR.legoAfter}  `, 700, 636, { size: 13, color: '#FF9CC4', alpha: q });
+      txt(`“${LLM_NAME[t0.dom]}”`, 700 + tw(`${STR.legoAfter}  `, 13), 637, { size: 21, weight: 700, fam: FD, alpha: q });
+    }
+    ctx.restore();
+  }
+}
+
+/* ---------- 정리 ---------- */
+const CODE = [
+  [['k', 'from'], ['', ' bertopic '], ['k', 'import'], ['', ' BERTopic']],
+  [],
+  [['', 'topic_model = BERTopic(language='], ['s', '"multilingual"'], ['', ')']],
+  [['', 'topics, probs = topic_model.fit_transform(docs)']],
+  [],
+  [['', 'topic_model.get_topic_info()      '], ['c', '# 토픽 목록']],
+  [['', 'topic_model.visualize_topics()    '], ['c', '# 토픽 지도']]
+];
+function drawPicto(k, cx, cy, t) {
+  if (k === 0) { for (let i = 0; i < 8; i++) { rr(cx - 76 + i * 19, cy - 13, 16, 26, 3); ctx.fillStyle = stripColor(VEC[IA][i]); ctx.fill(); } }
+  else if (k === 1) {
+    ctx.strokeStyle = S.accent; ctx.lineWidth = 2; ctx.beginPath();
+    for (let a = 0; a < 4 * Math.PI; a += 0.1) { const r = 4 + a * 1.9, x = cx - 50 + Math.cos(a) * r, y = cy + Math.sin(a) * r; a === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+    ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 10, cy); ctx.moveTo(cx + 4, cy - 5); ctx.lineTo(cx + 10, cy); ctx.lineTo(cx + 4, cy + 5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx + 22, cy + 8); ctx.lineTo(cx + 82, cy + 8); ctx.stroke();
+  } else if (k === 2) {
+    [[-45, 0, 22, 0], [5, -8, 17, 1], [48, 6, 20, 2]].forEach(([dx, dy, r, c]) => { ctx.beginPath(); ctx.ellipse(cx + dx, cy + dy, r, r * 0.75, 0.3, 0, Math.PI * 2); ctx.fillStyle = rgba(PAL[c], 0.8); ctx.fill(); });
+    ctx.fillStyle = NOISE_C; [[-10, 20], [80, -16]].forEach(([dx, dy]) => { ctx.beginPath(); ctx.arc(cx + dx, cy + dy, 3, 0, Math.PI * 2); ctx.fill(); });
+  } else {
+    [70, 52, 36, 22].forEach((w, i) => { rr(cx - 60, cy - 22 + i * 12, w * 1.6, 8, 3); ctx.fillStyle = i < 2 ? PAL[0] : '#5E7082'; ctx.fill(); });
+  }
+}
+function drawOutro(t) {
+  if (t < 208) return;
+  STR.recap.forEach((r, k) => {
+    const p = seg(t, 208.3 + k * 0.9, 208.9 + k * 0.9); if (p <= 0) return;
+    const x = 58 + k * 300, y = 118, w = 250, h = 170;
+    ctx.save(); ctx.globalAlpha = p; ctx.translate(0, (1 - eo(p)) * 16);
+    rr(x, y, w, h, 14); ctx.fillStyle = S.panel; ctx.fill(); ctx.strokeStyle = rgba(S.accent, 0.3); ctx.lineWidth = 1; ctx.stroke();
+    drawPicto(k, x + w / 2, y + 58, t);
+    txt(`${k + 1}. ${r[0]}`, x + 20, y + 124, { size: 19, weight: 700 });
+    txt(r[1], x + 20, y + 148, { size: 13, color: S.muted });
+    ctx.restore();
+    if (k > 0) { ctx.save(); ctx.globalAlpha = p; ctx.strokeStyle = S.muted; ctx.lineWidth = 2; const ax = x - 40; ctx.beginPath(); ctx.moveTo(ax + 6, y + h / 2); ctx.lineTo(ax + 32, y + h / 2); ctx.moveTo(ax + 25, y + h / 2 - 6); ctx.lineTo(ax + 32, y + h / 2); ctx.lineTo(ax + 25, y + h / 2 + 6); ctx.stroke(); ctx.restore(); }
+  });
+  const cA = seg(t, 213.8, 214.5); if (cA <= 0) return;
+  ctx.save(); ctx.globalAlpha = cA;
+  rr(200, 322, 880, 262, 14); ctx.fillStyle = '#07111A'; ctx.fill(); ctx.strokeStyle = S.line; ctx.lineWidth = 1; ctx.stroke();
+  ['#FF6B6B', '#F5C343', '#4FD1B5'].forEach((c, i) => { ctx.beginPath(); ctx.arc(226 + i * 18, 344, 5, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); });
+  txt('bertopic_quickstart.py', 640, 348, { size: 12, fam: FM, color: S.muted, align: 'center' });
+  const total = CODE.reduce((s, l) => s + l.reduce((a, p) => a + p[1].length, 0), 0);
+  let budget = Math.floor(total * seg(t, 214.4, 219.2)), cursor = null;
+  CODE.forEach((line, li) => {
+    let x = 232; const y = 390 + li * 26;
+    if (budget <= 0) return;
+    for (const [kind, s] of line) {
+      if (budget <= 0) break;
+      const part = s.slice(0, budget); budget -= part.length;
+      const col = kind === 'k' ? S.accent : kind === 's' ? '#F5C343' : kind === 'c' ? '#7F95A8' : S.text;
+      txt(part, x, y, { size: 16, fam: FM, color: col }); x += tw(part, 16, 400, FM);
+    }
+    cursor = [x, y];
+  });
+  if (cursor && Math.floor(t * 2.4) % 2 === 0) { ctx.fillStyle = S.accent; ctx.fillRect(cursor[0] + 3, cursor[1] - 14, 9, 18); }
+  ctx.restore();
+  const eA = seg(t, 220, 221);
+  if (eA > 0) {
+    txt(`${STR.endLine}  ↓`, 640, 636, { size: 20, weight: 700, align: 'center', alpha: eA });
+    txt(STR.url, 640, 664, { size: 13, fam: FM, color: S.muted, align: 'center', alpha: eA });
+  }
+}
+
+function drawChapterTitle(t) {
+  const ci = chapterAt(t); if (ci === 0) return;
+  const ch = CHAPTERS[ci], next = ci + 1 < CHAPTERS.length ? CHAPTERS[ci + 1].t : 1e9;
+  const a = seg(t, ch.t + 0.1, ch.t + 0.9) * (1 - seg(t, next - 0.5, next)); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = a;
+  let x = 44;
+  if (ch.n) { ctx.beginPath(); ctx.arc(x + 17, 58, 17, 0, Math.PI * 2); ctx.fillStyle = S.accent; ctx.fill(); txt(ch.n, x + 17, 59, { size: 17, weight: 700, color: S.ink, align: 'center', base: 'middle' }); x += 46; }
+  txt(ch.title, x, 67, { size: 28, weight: 700, fam: FD });
+  txt(ch.sub, x + tw(ch.title, 28, 700, FD) + 14, 66, { size: 15, color: S.muted });
+  ctx.restore();
+}
+// 영상 추출: 화면을 조금 줄이고 아래에 자막 띠를 둔다
+const EXK = 0.85, EXOX = (W - W * EXK) / 2, EXOY = 12;
+function drawCaption(t) {
+  const top = EXOY + H * EXK, c = captionAt(t);
+  ctx.fillStyle = '#1B2F42'; ctx.fillRect(EXOX, H - 5, W * EXK, 2);
+  ctx.fillStyle = S.accent; ctx.fillRect(EXOX, H - 5, W * EXK * (t / C.end), 2);
+  if (!c) return;
+  const lines = wrap(c, 24, 500, 1150, 2), mid = top + (H - 8 - top) / 2;
+  lines.forEach((ln, k) => txt(ln, 640, mid + (k - (lines.length - 1) / 2) * 33, { size: 24, weight: 500, align: 'center', base: 'middle' }));
+}
+function drawScene(t) {
+  ctx.globalAlpha = 1;
+  drawGraticule(t); drawTerrain(t); drawAxes(t); drawEdges(t); drawGlows(t);
+  drawSlips(t); drawBadges(t); drawEmbed(t); drawPoints(t);
+  drawTopicLabels(t); drawClusterBadges(t); drawDims(t);
+  drawCtf(t); drawResult(t); drawLego(t); drawOutro(t);
+  drawIntro(t); drawChapterTitle(t);
+}
+function render(t) {
+  HITS = [];
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (!EXPORT) {
+    ctx.drawImage(bgc, 0, 0);
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    drawScene(t);
+    return;
+  }
+  ctx.fillStyle = '#050A10'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.save();
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0); rr(EXOX, EXOY, W * EXK, H * EXK, 10); ctx.clip();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(bgc, EXOX * SCALE, EXOY * SCALE, W * EXK * SCALE, H * EXK * SCALE);
+  ctx.setTransform(SCALE * EXK, 0, 0, SCALE * EXK, EXOX * SCALE, EXOY * SCALE);
+  drawScene(t);
+  ctx.restore();
+  ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+  drawCaption(t);
+}
+
+/* =========================================================
+   6. 플레이어
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const seekEl = $('seek'), playBtn = $('playBtn'), timeLbl = $('timeLbl'), capText = $('capText'), capBox = $('cap'), bigPlay = $('bigPlay'), tip = $('tip');
+let T = 0, playing = false, started = false, speed = 1, lastTs = 0, lastCap = null, lastChap = -1, ccOn = true;
+const POSTER = 6.2;
+const ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1"/><rect x="13.5" y="5" width="4" height="14" rx="1"/></svg>';
+const ICON_REPLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></svg>';
+function syncUI() {
+  const ended = T >= C.end - 0.01;
+  playBtn.innerHTML = playing ? ICON_PAUSE : ended ? ICON_REPLAY : ICON_PLAY;
+  playBtn.setAttribute('aria-label', playing ? '일시정지 (스페이스)' : ended ? '다시 보기' : '재생 (스페이스)');
+  seekEl.value = T; seekEl.style.setProperty('--p', (T / C.end * 100) + '%');
+  timeLbl.textContent = `${fmtT(T)} / ${fmtT(C.end)}`;
+  const cap = started ? captionAt(T) : null;
+  if (cap !== lastCap && cap !== null) { lastCap = cap; capText.textContent = cap || ' '; }
+  const ci = chapterAt(T);
+  if (ci !== lastChap) { lastChap = ci; document.querySelectorAll('.chap').forEach((b, i) => b.setAttribute('aria-current', i === ci ? 'true' : 'false')); buildLab(ci); }
+}
+function play() {
+  if (T >= C.end - 0.01) T = 0;
+  playing = true; started = true; bigPlay.hidden = true; waterOverride = null; hideTip(); TTS.idx = -1; syncUI(); dirty = true;
+}
+function pause() { playing = false; ttsStop(); syncUI(); dirty = true; }
+function seek(t, keepPlaying = true) { T = clamp(t, 0, C.end); started = true; bigPlay.hidden = true; if (!keepPlaying) playing = false; ttsStop(); pCache.t = -1; cloudCache.t = -1; syncUI(); dirty = true; }
+function loop(ts) {
+  const dt = lastTs ? Math.min(0.1, (ts - lastTs) / 1000) : 0; lastTs = ts;
+  if (playing) { T = ttsHold(T + dt * speed); if (T >= C.end) { T = C.end; playing = false; } syncUI(); ttsTick(); dirty = true; }
+  if (dirty) { render(started ? T : POSTER); dirty = false; }
+  requestAnimationFrame(loop);
+}
+
+/* ---------- 조작 ---------- */
+playBtn.addEventListener('click', () => playing ? pause() : play());
+bigPlay.addEventListener('click', () => { T = 0; play(); });
+seekEl.addEventListener('input', () => seek(parseFloat(seekEl.value)));
+$('speed').addEventListener('change', e => { speed = parseFloat(e.target.value); });
+$('ccBtn').addEventListener('click', e => { ccOn = !ccOn; e.currentTarget.setAttribute('aria-pressed', String(ccOn)); capBox.classList.toggle('off', !ccOn); });
+$('fsBtn').addEventListener('click', () => {
+  const pl = $('player');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else if (pl.requestFullscreen) pl.requestFullscreen().catch(() => {});
+});
+document.addEventListener('fullscreenchange', () => setTimeout(resize, 60));
+document.addEventListener('keydown', e => {
+  const tg = e.target;
+  if (tg.closest && tg.closest('input, select, textarea')) return;
+  if (tg.closest && tg.closest('#playground, #quiz, #glossary')) return; // 놀이터·퀴즈에서 누른 키는 영상을 건드리지 않음
+  if (tg.closest && tg.closest('button') && (e.key === ' ' || e.key === 'Enter')) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === ' ' || e.key === 'k') { e.preventDefault(); playing ? pause() : play(); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); seek(T + 5); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); seek(T - 5); }
+  else if (e.key === 'c') $('ccBtn').click();
+  else if (e.key === 'f') $('fsBtn').click();
+  else if (e.key === 'v' && !$('ttsBtn').hidden) $('ttsBtn').click();
+});
+const ticks = $('ticks');
+CHAPTERS.slice(1).forEach(ch => { const i = document.createElement('i'); i.style.left = `calc(${ch.t / C.end * 100}% - 1px)`; ticks.appendChild(i); });
+const chapNav = $('chapters');
+CHAPTERS.forEach((ch, i) => {
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'chap';
+  b.innerHTML = `<span class="n">${ch.n || (i === 0 ? '▸' : '·')}</span><span class="tt">${ch.title}<small>${ch.sub}</small></span><span class="tm">${fmtT(ch.t)}</span>`;
+  b.addEventListener('click', () => { seek(ch.t + 0.01); if (!playing) play(); });
+  chapNav.appendChild(b);
+});
+
+/* ---------- 마우스 올리기 · 누르기 ---------- */
+function toLogical(e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H, r]; }
+function hitAt(x, y) { let best = null, bd = 1e9; for (const h of HITS) { const d = Math.hypot(h.x - x, h.y - y); if (d < h.r + 4 && d < bd) { bd = d; best = h; } } return best; }
+function esc(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function showTip(h, x, y, r) {
+  const t = started ? T : POSTER;
+  let html = '';
+  if (h.i >= 0) {
+    const d = DOCS[h.i];
+    html = `<div>${esc(d.text)}</div><div>${d.tokens.map(w => `<span class="tk">${esc(w)}</span>`).join('')}</div>`;
+    if (t >= 103 && t < 190) {
+      const inf = info(labelsAt(t)), l = inf.L[h.i];
+      html += `<div class="tp"><span class="dot" style="background:${tc(l)}"></span>${l < 0 ? '이상치 (-1): 어느 섬에도 속하지 않음' : `토픽 ${l} · ${esc(inf.byK[l].name)}`}</div>`;
+    } else if (chapterAt(t) === 2) html += `<div class="tp">누르면 아래 비교 도구에 넣어요</div>`;
+  } else {
+    html = `<div>${esc(h.text)}</div><div class="tp"><span class="dot" style="background:${tc(h.topic)}"></span>${h.user ? '직접 넣은 문장 · ' : ''}${h.topic < 0 ? '이상치 (-1)' : '토픽 ' + h.topic}</div>`;
+  }
+  tip.innerHTML = html; tip.hidden = false;
+  const px = x / W * r.width, py = y / H * r.height, tw_ = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.transform = `translate(${Math.round(clamp(px + 14, 6, r.width - tw_ - 6))}px, ${Math.round(py - th - 12 < 6 ? py + 16 : py - th - 12)}px)`;
+}
+function hideTip() { tip.hidden = true; }
+cv.addEventListener('mousemove', e => { const [x, y, r] = toLogical(e); const h = hitAt(x, y); cv.style.cursor = h ? 'pointer' : 'default'; h ? showTip(h, x, y, r) : hideTip(); });
+cv.addEventListener('mouseleave', hideTip);
+cv.addEventListener('click', e => {
+  const [x, y, r] = toLogical(e); const h = hitAt(x, y);
+  if (!h) { if (started) (playing ? pause() : play()); else { T = 0; play(); } return; }
+  showTip(h, x, y, r);
+  if (h.i >= 0 && chapterAt(started ? T : POSTER) === 2) { if (cmpNext === 0) cmpA = h.i; else cmpB = h.i; cmpNext = 1 - cmpNext; renderCompare(); }
+});
+
+/* =========================================================
+   7. 직접 해 보기 패널
+   ========================================================= */
+const lab = $('labBody');
+function stripHTML(v) { return `<div class="strip" aria-hidden="true">${v.map(x => `<i style="background:${stripColor(x)}"></i>`).join('')}</div>`; }
+function docOptions(sel) { return DOCS.map((d, i) => `<option value="${i}"${i === sel ? ' selected' : ''}>${esc(d.text)}</option>`).join(''); }
+function renderCompare() {
+  const box = document.getElementById('cmpBox'); if (!box) return;
+  document.getElementById('selA').value = cmpA; document.getElementById('selB').value = cmpB;
+  const s = cosSim(VEC[cmpA], VEC[cmpB]), ov = DOCS[cmpA].tokens.filter(w => DOCS[cmpB].tokens.includes(w));
+  const verdict = s >= 0.7 ? '뜻이 아주 비슷해요' : s >= 0.4 ? '조금 비슷해요' : '거의 관련이 없어요';
+  box.innerHTML = `<div><div class="doc">A · ${esc(DOCS[cmpA].text)}</div>${stripHTML(VEC[cmpA])}</div>
+    <div><div class="doc">B · ${esc(DOCS[cmpB].text)}</div>${stripHTML(VEC[cmpB])}</div>
+    <div><div class="row" style="margin:0"><strong>유사도 <span class="val">${s.toFixed(2)}</span></strong><span class="note">${verdict} · 겹치는 단어 ${ov.length}개${ov.length ? ' (' + ov.map(esc).join(', ') + ')' : ''}</span></div>
+    <div class="meter"><i style="width:${Math.round(clamp(s) * 100)}%"></i></div></div>`;
+}
+function topicChips(inf, sel) {
+  return inf.topics.filter(tp => tp.k >= 0).map(tp => `<button type="button" class="chipbtn" data-k="${tp.k}" aria-pressed="${tp.k === sel}"><span class="sw" style="background:${tc(tp.k)}"></span>토픽 ${tp.k} · ${esc(tp.words.slice(0, 2).join(', '))}</button>`).join('');
+}
+function codeBlock(src, id) { return `<pre class="code" id="${id}"><button type="button" class="copy" data-copy="${id}">복사</button><code>${src}</code></pre>`; }
+const hl = src => src.split('\n').map(line => {
+  const ci = line.indexOf('#'), code = ci >= 0 ? line.slice(0, ci) : line, com = ci >= 0 ? line.slice(ci) : '';
+  const c = esc(code).replace(/(&quot;.*?&quot;)/g, '<span class="s">$1</span>').replace(/\b(from|import)\b/g, '<span class="k">$1</span>');
+  return c + (com ? `<span class="c">${esc(com)}</span>` : '');
+}).join('\n');
+function bindCopy(root = lab) {
+  root.querySelectorAll('.copy').forEach(b => b.addEventListener('click', () => {
+    const code = document.querySelector(`#${b.dataset.copy} code`).textContent;
+    const done = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+    try {
+      navigator.clipboard.writeText(code).then(done, () => { const r = document.createRange(); r.selectNodeContents(document.querySelector(`#${b.dataset.copy} code`)); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = '선택됨'; });
+    } catch (err) { b.textContent = '선택해서 복사하세요'; }
+  }));
+}
+const PANELS = {
+  intro() {
+    return `<h3>이 영상에 쓰인 문서 90개</h3>
+      <p>축구, 요리, 경제, 우주, 반려동물 이야기가 섞여 있고 어디에도 속하지 않는 잡담도 있어요. BERTopic은 이 분류를 모른 채 시작해요.</p>
+      <ul class="doclist">${DOCS.map((d, i) => `<li><span>${String(i + 1).padStart(2, '0')}</span>${esc(d.text)}</li>`).join('')}</ul>
+      <p class="hint">화면 속 종이나 점에 마우스를 올리면(휴대폰은 탭) 원문을 볼 수 있어요. 스페이스로 재생·멈춤, ← →로 5초씩 이동해요.</p>`;
+  },
+  embed() {
+    return `<h3>두 문장 비교하기</h3>
+      <p>임베딩 숫자가 얼마나 비슷한지(코사인 유사도)로 문장의 뜻이 얼마나 가까운지 잴 수 있어요.</p>
+      <div class="row"><label for="selA">A</label><select id="selA">${docOptions(cmpA)}</select></div>
+      <div class="row"><label for="selB">B</label><select id="selB">${docOptions(cmpB)}</select></div>
+      <div class="cmp" id="cmpBox"></div>
+      <p class="hint">화면의 종이를 누르면 A, B에 번갈아 들어가요. 숫자는 설명을 위해 만든 16칸짜리 예시예요. 실제 모델은 문장마다 숫자 384개를 만들어요.</p>`;
+  },
+  umap() {
+    return `<h3>종이 펼쳐 보기</h3>
+      <p>UMAP은 가까운 이웃 관계를 지키면서 차원을 줄여요. 슬라이더로 말린 종이를 직접 펴 보세요.</p>
+      <div class="row"><label for="unroll">펼친 정도</label><input id="unroll" type="range" min="0" max="100" value="${Math.round(seg(T, 62, 72) * 100)}"><span class="val" id="unrollV">${Math.round(seg(T, 62, 72) * 100)}%</span></div>
+      <div class="row"><label class="chk"><input id="edgesChk" type="checkbox"${showEdges ? ' checked' : ''}> 이웃 연결선 계속 보기</label></div>
+      <div class="tblwrap"><table class="tbl"><thead><tr><th>설정</th><th>BERTopic 기본값</th><th>뜻</th></tr></thead><tbody>
+        <tr><td>n_neighbors</td><td style="text-align:left">15</td><td style="text-align:left">이웃을 몇 개까지 기억할지</td></tr>
+        <tr><td>n_components</td><td style="text-align:left">5</td><td style="text-align:left">몇 차원으로 줄일지</td></tr>
+        <tr><td>min_dist</td><td style="text-align:left">0.0</td><td style="text-align:left">점을 얼마나 촘촘히 모을지</td></tr>
+        <tr><td>metric</td><td style="text-align:left">cosine</td><td style="text-align:left">거리를 재는 방법</td></tr></tbody></table></div>`;
+  },
+  cluster() {
+    const inf = info(userMcs);
+    return `<h3>최소 군집 크기 바꿔 보기</h3>
+      <p>값을 줄이면 작은 섬도 토픽이 되고, 키우면 작은 섬은 이상치가 돼요. HDBSCAN이 이 페이지 안에서 바로 다시 계산해요. BERTopic 기본값은 10이에요.</p>
+      <div class="row"><label for="mcs">min_cluster_size</label><input id="mcs" type="range" min="3" max="15" value="${userMcs}"><span class="val" id="mcsV">${userMcs}</span></div>
+      <div class="stat" id="mcsStat"><b>토픽 <span>${inf.K}</span>개</b><b>이상치 <span>${inf.noise}</span>개</b></div>
+      <div class="row"><label for="water">수면 높이</label><input id="water" type="range" min="0" max="100" value="${waterOverride == null ? 15 : Math.round((waterOverride - 0.02) / 0.6 * 100)}"><button type="button" class="btn ghost" id="waterReset">원래대로</button></div>
+      <p class="note">수면을 올리면 가장 빽빽한 곳만 섬으로 남고, 내리면 섬들이 커지다가 서로 붙어요. 여기서 바꾼 최소 군집 크기는 뒤 장면(c-TF-IDF, 결과)에도 그대로 이어져요.</p>`;
+  },
+  ctf() {
+    const inf = info(userMcs), fk = focusTopic(inf);
+    return `<h3>토픽별 단어 점수</h3>
+      <p>토픽을 고르면 화면의 막대그래프도 그 토픽으로 바뀌어요. IDF를 끄면 흔한 단어가 얼마나 위로 올라오는지 비교해 보세요.</p>
+      <div class="samples" id="focusChips">${topicChips(inf, fk)}</div>
+      <div class="row"><label class="chk"><input id="idfChk" type="checkbox" checked> IDF 적용 (흔한 단어 깎기)</label></div>
+      <div class="tblwrap" id="ctfTable"></div>
+      <p class="note">점수 = 빈도 × log(1 + A ÷ 전체 빈도). 실제 구현은 빈도를 토픽의 총 단어 수로 나눠 정규화하지만 토픽 안의 순위는 같아요. 한국어는 형태소 분석기로 명사만 뽑아 쓰는 경우가 많아서, 여기서도 명사만 셌어요.</p>`;
+  },
+  result() {
+    const inf = info(userMcs);
+    return `<h3>새 문장 넣어 보기</h3>
+      <p>문장을 넣으면 어느 토픽 섬에 떨어지는지 보여 줘요.</p>
+      <form class="row" id="newForm"><input id="newText" type="text" placeholder="예: 손흥민이 두 골을 넣었다" autocomplete="off"><button class="btn" type="submit">토픽 찾기</button></form>
+      <div class="samples">${['화성 탐사선이 사진을 보냈다', '고양이 사료를 바꿨다', '금리가 또 올랐다', '마늘 소스 파스타 레시피', '오늘 점심 뭐 먹지'].map(s => `<button type="button" class="chipbtn sample">${s}</button>`).join('')}</div>
+      <div id="newResult"></div>
+      <div class="toplist">${inf.topics.map(tp => `<div><span class="sw" style="background:${tc(tp.k)}"></span><code>${esc(tp.name)}</code><span class="note">${tp.n}개</span></div>`).join('')}</div>
+      <p class="note">간이 시뮬레이션이에요. 실제 BERTopic은 새 문장을 임베딩한 뒤 가장 가까운 군집을 찾아요(transform). 여기서는 토픽 대표 단어가 문장에 들어 있는지로 흉내 냈어요.</p>`;
+  },
+  lego() {
+    return `<h3>부품 바꿔 끼우는 코드</h3>
+      <p>BERTopic을 만들 때 각 단계에 원하는 모델을 넣으면 돼요. 넣지 않은 단계는 기본값을 써요.</p>
+      ${codeBlock(hl(`from bertopic import BERTopic
+from bertopic.representation import KeyBERTInspired
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+
+topic_model = BERTopic(
+    embedding_model="paraphrase-multilingual-MiniLM-L12-v2",
+    umap_model=PCA(n_components=5),          # UMAP 대신 PCA
+    hdbscan_model=KMeans(n_clusters=5),      # HDBSCAN 대신 k-Means
+    representation_model=KeyBERTInspired(),  # 토픽 단어 다듬기
+)`), 'legoCode')}
+      <p class="note" style="margin-top:12px">k-Means는 토픽 개수를 직접 정해야 하고, 이상치 없이 모든 문서를 어딘가에 넣어요.</p>`;
+  },
+  outro() {
+    return `<h3>내 문서로 해 보기</h3>
+      <p><code>docs</code>에 문자열 리스트를 넣으면 끝이에요. 한국어 문서라면 명사만 세도록 토크나이저를 붙여 주면 토픽 이름이 훨씬 깔끔해져요.</p>
+      ${codeBlock(hl(`# pip install bertopic konlpy
+from bertopic import BERTopic
+from konlpy.tag import Okt
+from sklearn.feature_extraction.text import CountVectorizer
+
+okt = Okt()
+vectorizer = CountVectorizer(tokenizer=okt.nouns)   # 명사만 세기
+
+topic_model = BERTopic(language="multilingual", vectorizer_model=vectorizer)
+topics, probs = topic_model.fit_transform(docs)
+
+topic_model.get_topic_info()     # 토픽 목록
+topic_model.visualize_topics()   # 토픽 지도`), 'outroCode')}
+      <p class="note" style="margin-top:12px">문서가 많을수록 결과가 좋아져요. 수백 개 이상을 권해요.</p>
+      <p class="hint">영상 아래 <a href="#playground">놀이터</a>에서 점을 옮기고 새 문장을 놓아 보고, <a href="#quiz">퀴즈</a>로 배운 내용을 확인해 보세요.</p>`;
+  }
+};
+PANELS.docs = PANELS.intro;
+function renderCtfTable() {
+  const box = document.getElementById('ctfTable'); if (!box) return;
+  const inf = info(userMcs), fk = focusTopic(inf); if (fk === null) { box.innerHTML = '<p class="note">토픽이 없어요. 최소 군집 크기를 줄여 보세요.</p>'; return; }
+  const useIdf = document.getElementById('idfChk').checked;
+  const rows = (inf.ct.out[fk] || []).map(o => ({ ...o, sc: useIdf ? o.score : o.tf })).sort((a, b) => b.sc - a.sc || b.tf - a.tf).slice(0, 8);
+  const nCls = inf.ct.classes.length;
+  box.innerHTML = `<table class="tbl"><thead><tr><th>순위</th><th>단어</th><th>빈도</th><th>전체 빈도</th><th>IDF</th><th>점수</th></tr></thead><tbody>
+    ${rows.map((o, i) => { const pres = inf.ct.classes.filter(k => inf.ct.tf[k][o.w]).length; return `<tr class="${pres >= Math.max(3, Math.ceil(nCls * 0.6)) ? 'common' : ''}"><td>${i + 1}</td><td>${esc(o.w)}</td><td>${o.tf}</td><td>${o.f}</td><td>${useIdf ? o.idf.toFixed(2) : '-'}</td><td>${o.sc.toFixed(useIdf ? 2 : 0)}</td></tr>`; }).join('')}
+    </tbody></table><p class="note" style="margin:6px 0 0">회색 줄 = 여러 섬에 두루 나오는 흔한 단어</p>`;
+}
+function addUserDoc(text) {
+  text = text.trim(); if (!text) return;
+  const inf = info(userMcs), p = predict(text, inf), [x, y] = placeFor(p.topic, text, inf);
+  USERDOCS.push({ text, x, y, topic: p.topic }); if (USERDOCS.length > 6) USERDOCS.shift();
+  const r = document.getElementById('newResult');
+  if (r) r.innerHTML = `<div class="result"><strong>${p.topic < 0 ? '이상치 (-1)' : `토픽 ${p.topic} · ${esc(inf.byK[p.topic].name)}`}</strong>
+    <div class="note">${p.found.length ? `알아본 단어: ${p.found.map(esc).join(', ')}` : '아는 단어가 없어서 어느 섬에도 넣지 않았어요.'}</div></div>`;
+  seek(C.result + 4.6, false); dirty = true;
+}
+function buildLab(ci) {
+  if (EXPORT) return;
+  const id = CHAPTERS[ci].id;
+  lab.innerHTML = PANELS[id] ? PANELS[id]() : '';
+  if (id === 'embed') {
+    renderCompare();
+    document.getElementById('selA').addEventListener('change', e => { cmpA = +e.target.value; renderCompare(); });
+    document.getElementById('selB').addEventListener('change', e => { cmpB = +e.target.value; renderCompare(); });
+  } else if (id === 'umap') {
+    const u = document.getElementById('unroll');
+    u.addEventListener('input', () => { document.getElementById('unrollV').textContent = u.value + '%'; seek(62 + u.value / 10, false); });
+    document.getElementById('edgesChk').addEventListener('change', e => { showEdges = e.target.checked; dirty = true; });
+  } else if (id === 'cluster') {
+    const m = document.getElementById('mcs');
+    m.addEventListener('input', () => {
+      userMcs = +m.value; document.getElementById('mcsV').textContent = userMcs;
+      const inf = info(userMcs); document.getElementById('mcsStat').innerHTML = `<b>토픽 <span>${inf.K}</span>개</b><b>이상치 <span>${inf.noise}</span>개</b>`;
+      if (T < 112 || T >= 117.4) seek(112, false); dirty = true;
+    });
+    const w = document.getElementById('water');
+    w.addEventListener('input', () => { waterOverride = 0.02 + w.value / 100 * 0.6; if (T < 104) seek(110.5, false); else pause(); dirty = true; });
+    document.getElementById('waterReset').addEventListener('click', () => { waterOverride = null; w.value = 15; dirty = true; });
+  } else if (id === 'ctf') {
+    renderCtfTable();
+    document.getElementById('focusChips').addEventListener('click', e => {
+      const b = e.target.closest('.chipbtn'); if (!b) return;
+      userFocus = +b.dataset.k; document.querySelectorAll('#focusChips .chipbtn').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      renderCtfTable(); if (T > 157) seek(C.ctf + 0.2); dirty = true;
+    });
+    document.getElementById('idfChk').addEventListener('change', renderCtfTable);
+  } else if (id === 'result') {
+    document.getElementById('newForm').addEventListener('submit', e => { e.preventDefault(); addUserDoc(document.getElementById('newText').value); });
+    lab.querySelectorAll('.sample').forEach(b => b.addEventListener('click', () => { document.getElementById('newText').value = b.textContent; addUserDoc(b.textContent); }));
+  }
+  bindCopy();
+}
+
+/* =========================================================
+   8. 음성 해설 — 브라우저에 들어 있는 음성(TTS)으로 자막 읽기
+   음성이 자막을 다 읽을 때까지 영상이 그 자막 끝에서 기다린다.
+   ========================================================= */
+const TTS = { on: false, ok: !EXPORT && 'speechSynthesis' in window, busy: false, idx: -1, voice: null, u: null, since: 0, len: 0 };
+// 화면용 기호와 영문 약어를 소리 내어 읽기 좋게 바꾼다
+const TTS_READ = [
+  [/①/g, '첫째, '], [/②/g, '둘째, '], [/③/g, '셋째, '], [/④/g, '넷째, '],
+  [/c-TF-IDF/g, '씨 티에프 아이디에프'], [/\bIDF\b/g, '아이디에프'], [/\bTF\b/g, '티에프'],
+  [/KeyBERT/g, '키버트'], [/BERTopic/g, '버토픽'], [/BERT/g, '버트'], [/UMAP/g, '유맵'], [/HDBSCAN/g, '에이치디비스캔'], [/LLM/g, '엘엘엠'],
+  [/\(-1\)/g, ', 마이너스 일, '], [/[‘’“”]/g, ''], [/→/g, ', '], [/…/g, ', ']
+];
+const ttsLine = s => TTS_READ.reduce((a, [re, r]) => a.replace(re, r), s);
+function ttsVoice() {
+  if (!TTS.ok) return;
+  const vs = speechSynthesis.getVoices();
+  TTS.voice = vs.find(v => /^ko/i.test(v.lang) && /google|yuna|sun-?hi|heami|injoon|female/i.test(v.name)) || vs.find(v => /^ko/i.test(v.lang)) || null;
+}
+function ttsStop() {
+  if (TTS.ok && TTS.on) speechSynthesis.cancel();
+  TTS.busy = false; TTS.idx = -1;
+}
+function ttsSpeak(text) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(ttsLine(text));
+  u.lang = 'ko-KR'; if (TTS.voice) u.voice = TTS.voice;
+  u.rate = clamp(1.05 * speed, 0.6, 2);
+  u.onend = u.onerror = () => { if (TTS.u === u) TTS.busy = false; };
+  TTS.u = u; TTS.busy = true; TTS.since = performance.now(); TTS.len = text.length;
+  speechSynthesis.speak(u);
+}
+// 재생 중 다음 시각을 정할 때: 아직 읽는 중이면 지금 자막의 끝을 넘지 않는다
+function ttsHold(nt) {
+  if (!TTS.on || !TTS.busy) return nt;
+  if (performance.now() - TTS.since > (TTS.len * 0.35 + 6) * 1000) { TTS.busy = false; return nt; } // 끝났다는 신호가 오지 않을 때를 대비
+  const c = CAPTIONS[TTS.idx]; if (!c) return nt;
+  return Math.min(nt, Math.max(T, c[1] - 0.05));
+}
+function ttsTick() {
+  if (!TTS.on || !playing) return;
+  const i = CAPTIONS.findIndex(c => T >= c[0] && T < c[1]);
+  if (i >= 0 && i !== TTS.idx) { TTS.idx = i; ttsSpeak(CAPTIONS[i][2]); }
+}
+{
+  const btn = $('ttsBtn'), note = $('ttsNote');
+  if (!TTS.ok) btn.hidden = true;
+  else { ttsVoice(); speechSynthesis.addEventListener ? speechSynthesis.addEventListener('voiceschanged', ttsVoice) : (speechSynthesis.onvoiceschanged = ttsVoice); }
+  btn.addEventListener('click', () => {
+    TTS.on = !TTS.on; btn.setAttribute('aria-pressed', String(TTS.on));
+    if (TTS.on) {
+      ttsVoice(); TTS.idx = -1;
+      note.textContent = TTS.voice
+        ? `음성 해설 켜짐 · ${TTS.voice.name}. 음성이 자막을 다 읽을 때까지 영상이 잠깐씩 기다려요.`
+        : '음성 해설 켜짐 · 이 브라우저에는 한국어 음성이 없어 기본 음성으로 읽어요. 운영체제 설정에서 한국어 음성을 추가하면 더 자연스러워요.';
+      note.hidden = false;
+      if (!started) { T = 0; play(); }
+    } else { speechSynthesis.cancel(); TTS.busy = false; TTS.idx = -1; note.hidden = true; }
+  });
+}
+
+/* =========================================================
+   9. 놀이터 — 점을 옮기거나 새 문장을 놓으면 HDBSCAN · c-TF-IDF를 다시 계산
+   ========================================================= */
+const VOCAB = new Set(DOCS.flatMap(d => d.tokens));
+const JOSA = ['에서는', '에서도', '에게서', '으로는', '이랑', '에서', '에게', '까지', '부터', '으로', '처럼', '보다', '하고', '이나', '이고', '은', '는', '이', '가', '을', '를', '에', '의', '와', '과', '도', '만', '로', '랑'];
+const HADA = /(했다|한다|하는|하고|해서|했고|했어|해요|합니다|하다|하며|하면|했던)$/;
+const STOPW = new Set(['그', '이', '저', '것', '수', '등', '더', '또', '잘', '안', '못', '좀', '꼭', '너무', '아주', '매우', '다시', '이번', '모두', '그리고', '하지만', '그래서', '지금']);
+// 아주 단순한 한국어 토크나이저: 어절에서 조사를 떼고 명사처럼 보이는 것만 고른다 (형태소 분석기 흉내)
+function pickWord(w) {
+  if (VOCAB.has(w)) return { t: w, on: true };
+  for (const j of JOSA) if (w.length > j.length && w.endsWith(j) && VOCAB.has(w.slice(0, -j.length))) return { t: w.slice(0, -j.length), on: true };
+  const h = w.match(HADA); if (h && w.length - h[0].length >= 2) return { t: w.slice(0, -h[0].length), on: true };
+  if (/^[A-Za-z0-9]+$/.test(w)) return { t: w, on: w.length >= 2 };
+  for (const j of JOSA) if (w.length > j.length && w.endsWith(j)) { const s = w.slice(0, -j.length); return { t: s, on: s.length >= 2 && !STOPW.has(s) }; }
+  if (/[다요죠네까지]$/.test(w)) return { t: w, on: false };
+  return { t: w, on: w.length >= 2 && !STOPW.has(w) };
+}
+const guessTokens = text => text.replace(/[^0-9A-Za-z가-힣\s]/g, ' ').split(/\s+/).filter(Boolean).map(w => ({ w, ...pickWord(w) }));
+
+const PG = { docs: [], mcs: 10, ms: 10, msAuto: true, nr: 0, red: false, sel: null, hover: -1, drag: null, place: null, toks: [], res: null, sig: '', dirty: true, need: false, ptr: null };
+const relabelBySize = L => {
+  const cnt = {}; L.forEach(l => { if (l >= 0) cnt[l] = (cnt[l] || 0) + 1; });
+  const m = {}; Object.keys(cnt).map(Number).sort((a, b) => cnt[b] - cnt[a] || a - b).forEach((l, i) => m[l] = i);
+  return L.map(l => l < 0 ? -1 : m[l]);
+};
+function topicVecs(L, docs) {
+  const ct = ctfidf(L, docs), V = {};
+  for (const c of ct.classes) { if (c < 0) continue; const v = {}; ct.out[c].forEach(o => v[o.w] = o.score); V[c] = v; }
+  return V;
+}
+const vcos = (a, b) => { let d = 0, na = 0, nb = 0; for (const k in a) { na += a[k] * a[k]; if (b[k]) d += a[k] * b[k]; } for (const k in b) nb += b[k] * b[k]; return na && nb ? d / Math.sqrt(na * nb) : 0; };
+// nr_topics: 가장 작은 토픽을 단어 점수(c-TF-IDF)가 가장 비슷한 토픽에 합치기를 반복
+function mergeTopics(L, docs, nr) {
+  L = L.slice();
+  for (let guard = 0; guard < 60; guard++) {
+    const ks = [...new Set(L.filter(l => l >= 0))]; if (ks.length <= nr) break;
+    const cnt = k => L.reduce((s, l) => s + (l === k), 0);
+    const small = ks.slice().sort((a, b) => cnt(a) - cnt(b) || b - a)[0];
+    const V = topicVecs(L, docs); let best = -1, bs = -1;
+    for (const k of ks) if (k !== small) { const sc = vcos(V[small] || {}, V[k] || {}); if (sc > bs) { bs = sc; best = k; } }
+    L = L.map(l => l === small ? best : l);
+  }
+  return relabelBySize(L);
+}
+// reduce_outliers(strategy="embeddings") 흉내: 이상치를 지도에서 가장 가까운 토픽 중심으로
+function reduceOut(L, docs) {
+  const cen = {};
+  L.forEach((l, i) => { if (l < 0) return; const c = cen[l] || (cen[l] = [0, 0, 0]); c[0] += docs[i].x; c[1] += docs[i].y; c[2]++; });
+  const ks = Object.keys(cen).map(Number); if (!ks.length) return L;
+  return L.map((l, i) => {
+    if (l >= 0) return l;
+    let bk = ks[0], bd = Infinity;
+    for (const k of ks) { const c = cen[k], d = Math.hypot(docs[i].x - c[0] / c[2], docs[i].y - c[1] / c[2]); if (d < bd) { bd = d; bk = k; } }
+    return bk;
+  });
+}
+function pgRun() {
+  const D = PG.docs, n = D.length;
+  let L = n >= 3 ? hdbscan(D.map(d => [d.x, d.y]), PG.mcs, PG.msAuto ? PG.mcs : PG.ms) : D.map(() => -1);
+  if (PG.nr > 0) L = mergeTopics(L, D, PG.nr);
+  if (PG.red) L = reduceOut(L, D);
+  const ct = ctfidf(L, D), K = Math.max(-1, ...L) + 1, topics = [];
+  for (let k = -1; k < K; k++) {
+    const idx = []; L.forEach((l, i) => { if (l === k) idx.push(i); });
+    if (!idx.length) continue;
+    const words = (ct.out[k] || []).slice(0, 10);
+    topics.push({
+      k, idx, n: idx.length, words,
+      cx: idx.reduce((s, i) => s + D[i].x, 0) / idx.length, top: idx.map(i => D[i].y).sort((a, b) => a - b)[Math.floor(idx.length * 0.15)],
+      name: `${k}_${words.slice(0, 4).map(o => o.w).join('_')}`
+    });
+  }
+  const byK = {}; topics.forEach(tp => byK[tp.k] = tp);
+  PG.res = { L, K, ct, topics, byK, noise: L.filter(l => l < 0).length };
+  if (PG.sel != null && !byK[PG.sel]) PG.sel = null;
+  PG.dirty = true;
+  const sig = [L.join(','), n, PG.sel, D.map(d => d.tokens.join('·')).join('|').length].join(';');
+  if (sig !== PG.sig) { PG.sig = sig; pgPanels(); } else pgStat();
+}
+function pgReset() {
+  PG.docs = DOCS.map(d => ({ text: d.text, tokens: d.tokens.slice(), x: d.x, y: d.y, user: false }));
+  Object.assign(PG, { mcs: 10, ms: 10, msAuto: true, nr: 0, red: false, sel: null, hover: -1, place: null });
+  $('pgMcs').value = 10; $('pgMcsV').textContent = 10; $('pgMs').value = 10; $('pgMsV').textContent = 10; $('pgMs').disabled = true;
+  $('pgMsAuto').checked = true; $('pgNr').value = '0'; $('pgRed').checked = false; $('pgMode').hidden = true;
+  PG.sig = ''; pgRun();
+}
+
+/* ---------- 놀이터 표 · 막대 · 코드 ---------- */
+function pgStat() {
+  const R = PG.res;
+  $('pgStat').innerHTML = `<span>토픽 <b>${R.K}</b>개</span><span>이상치 <b>${R.noise}</b>개</span><span>문서 <b>${PG.docs.length}</b>개</span><span class="sp"></span><span class="kb">끌기: 옮기기 · 두 번 누르기: 빼기 · 점 누르기: 그 토픽 보기</span>`;
+}
+function pgPanels() {
+  const R = PG.res; pgStat();
+  const rows = R.topics.slice().sort((a, b) => a.k - b.k);
+  $('pgInfo').innerHTML = `<table class="tbl tinfo"><thead><tr><th>Topic</th><th>Count</th><th>Name</th><th>Representation</th></tr></thead><tbody>${rows.map(tp => `<tr class="${tp.k === PG.sel ? 'on' : ''}"><td><button type="button" class="pick" data-k="${tp.k}" aria-pressed="${tp.k === PG.sel}"><span class="sw" style="background:${tc(tp.k)}"></span>${tp.k}</button></td><td>${tp.n}</td><td><code>${esc(tp.name)}</code></td><td class="reps">${tp.words.slice(0, 6).map(o => esc(o.w)).join(', ') || '–'}</td></tr>`).join('')}</tbody></table>`;
+  const tp = PG.sel != null ? R.byK[PG.sel] : R.byK[0] || null;
+  $('pgWordsTitle').innerHTML = `토픽 단어 점수 <code>get_topic(${tp ? tp.k : 0})</code>`;
+  if (!tp) $('pgWords').innerHTML = '<p class="note" style="margin:0">토픽이 없어요. min_cluster_size를 줄여 보세요.</p>';
+  else {
+    const top = tp.words.slice(0, 8), mx = Math.max(...top.map(o => o.score), 1e-9);
+    $('pgWords').innerHTML = top.map(o => `<div><span>${esc(o.w)}</span><i style="width:${Math.max(3, o.score / mx * 100)}%;background:${tc(tp.k)}"></i><span>${o.score.toFixed(2)}</span></div>`).join('')
+      + `<p class="note" style="margin:6px 0 0">점수 = 이 토픽에서의 빈도 × log(1 + A ÷ 전체 빈도)${tp.k < 0 ? '. 이상치(-1)도 하나의 묶음으로 계산해요.' : ''}</p>`;
+  }
+  const hp = [`min_cluster_size=${PG.mcs}`]; if (!PG.msAuto) hp.push(`min_samples=${PG.ms}`); hp.push('prediction_data=True');
+  const src = `from bertopic import BERTopic
+from hdbscan import HDBSCAN
+from sentence_transformers import SentenceTransformer
+
+embedding_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+embeddings = embedding_model.encode(docs)
+
+hdbscan_model = HDBSCAN(${hp.join(', ')})
+topic_model = BERTopic(embedding_model=embedding_model,
+                       hdbscan_model=hdbscan_model${PG.nr ? `,\n                       nr_topics=${PG.nr}` : ''})
+topics, probs = topic_model.fit_transform(docs, embeddings)${PG.red ? `
+
+# 이상치(-1)를 가장 가까운 토픽으로
+topics = topic_model.reduce_outliers(docs, topics, strategy="embeddings", embeddings=embeddings)
+topic_model.update_topics(docs, topics=topics)` : ''}
+
+topic_model.get_topic_info()`;
+  const box = $('pgCode'); box.innerHTML = codeBlock(hl(src), 'pgCodeBlock'); bindCopy(box);
+}
+
+/* ---------- 놀이터 지도 그리기 ---------- */
+const pcv = $('pgCanvas'), pctx = pcv.getContext('2d'), pTip = $('pgTip');
+let PS = 1, PZ = 1; // PZ: 좁은 화면에서 점과 이름표를 키우는 배율
+const PV = { cx: 640, cy: 372, s: 355 };
+const pToS = (x, y) => [PV.cx + x * PV.s, PV.cy + y * PV.s];
+const pFromS = (sx, sy) => [clamp((sx - PV.cx) / PV.s, XMIN, XMAX), clamp((sy - PV.cy) / PV.s, YMIN, YMAX)];
+const pgBg = document.createElement('canvas'), pbx = pgBg.getContext('2d');
+const pgLay = document.createElement('canvas'); pgLay.width = 320; pgLay.height = 180; // 섬은 작게 그려 흐리게 늘린다
+const plx = pgLay.getContext('2d');
+const pgLay2 = document.createElement('canvas'); pgLay2.width = 320; pgLay2.height = 180;
+const plx2 = pgLay2.getContext('2d');
+function pgResize() {
+  const r = pcv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  pcv.width = Math.max(320, Math.round(r.width * dpr)); pcv.height = Math.round(pcv.width * 9 / 16); PS = pcv.width / W;
+  PZ = clamp(900 / Math.max(1, r.width), 1, 2.4);
+  pgBg.width = pcv.width; pgBg.height = pcv.height; pbx.setTransform(PS, 0, 0, PS, 0, 0);
+  const g = pbx.createRadialGradient(640, 330, 60, 640, 360, 820);
+  g.addColorStop(0, '#12283D'); g.addColorStop(1, '#08121C');
+  pbx.fillStyle = g; pbx.fillRect(0, 0, W, H);
+  pbx.fillStyle = 'rgba(140,180,210,0.075)';
+  for (let x = 20; x < W; x += 40) for (let y = 20; y < H; y += 40) pbx.fillRect(x - 1, y - 1, 2, 2);
+  PG.dirty = true;
+}
+function ppill(str, x, y, o) {
+  const fs = 16 * PZ;
+  pctx.font = fnt(fs, 700);
+  const w = pctx.measureText(str).width + 22 * PZ, h = fs + 13 * PZ;
+  x = clamp(x, w / 2 + 6, W - w / 2 - 6); y = Math.max(h / 2 + 6, y);
+  pctx.beginPath(); pctx.roundRect ? pctx.roundRect(x - w / 2, y - h / 2, w, h, h / 2) : pctx.rect(x - w / 2, y - h / 2, w, h);
+  pctx.fillStyle = o.bg || 'rgba(8,18,28,0.88)'; pctx.fill();
+  if (o.stroke) { pctx.strokeStyle = o.stroke; pctx.lineWidth = 1.2; pctx.stroke(); }
+  pctx.fillStyle = o.fg || S.text; pctx.textAlign = 'center'; pctx.textBaseline = 'middle'; pctx.fillText(str, x, y + 0.5);
+}
+function pgDraw() {
+  pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.globalAlpha = 1; pctx.drawImage(pgBg, 0, 0);
+  const R = PG.res; if (!R) return;
+  const P = PG.docs.map(d => pToS(d.x, d.y)), sel = PG.sel;
+  // 섬: 토픽마다 원을 합친 모양을 작게 그린 뒤 흐리게 늘린다
+  for (const tp of R.topics) {
+    if (tp.k < 0) continue;
+    plx.setTransform(1, 0, 0, 1, 0, 0); plx.clearRect(0, 0, 320, 180); plx.setTransform(0.25, 0, 0, 0.25, 0, 0);
+    plx.fillStyle = tc(tp.k);
+    for (const i of tp.idx) { plx.beginPath(); plx.arc(P[i][0], P[i][1], 34, 0, Math.PI * 2); plx.fill(); }
+    plx2.clearRect(0, 0, 320, 180); plx2.filter = 'blur(2px)'; plx2.drawImage(pgLay, 0, 0); plx2.filter = 'none';
+    pctx.save(); pctx.globalAlpha = sel == null || sel === tp.k ? 0.36 : 0.08; pctx.imageSmoothingEnabled = true; pctx.imageSmoothingQuality = 'high';
+    pctx.drawImage(pgLay2, 0, 0, pcv.width, pcv.height); pctx.restore();
+  }
+  pctx.setTransform(PS, 0, 0, PS, 0, 0);
+  // 점
+  PG.docs.forEach((d, i) => {
+    const l = R.L[i], [x, y] = P[i];
+    pctx.globalAlpha = sel != null && l !== sel ? 0.35 : 1;
+    const r = (d.user ? 8 : 6.5) * PZ;
+    pctx.beginPath(); pctx.arc(x, y, r, 0, Math.PI * 2);
+    if (l < 0) { pctx.fillStyle = '#0E1D2C'; pctx.fill(); pctx.strokeStyle = '#9FB0C0'; pctx.lineWidth = 1.6; pctx.stroke(); }
+    else { pctx.fillStyle = tc(l); pctx.fill(); pctx.strokeStyle = 'rgba(8,19,29,0.8)'; pctx.lineWidth = 1; pctx.stroke(); }
+    if (d.user) { pctx.beginPath(); pctx.arc(x, y, r + 4 * PZ, 0, Math.PI * 2); pctx.strokeStyle = '#FFFFFF'; pctx.lineWidth = 1.6; pctx.stroke(); }
+    if (i === PG.hover) { pctx.beginPath(); pctx.arc(x, y, r + 7 * PZ, 0, Math.PI * 2); pctx.strokeStyle = S.accent; pctx.lineWidth = 2; pctx.stroke(); }
+  });
+  pctx.globalAlpha = 1;
+  // 이름표
+  for (const tp of R.topics) {
+    if (tp.k < 0) continue;
+    const [x] = pToS(tp.cx, 0), [, y] = pToS(0, tp.top);
+    pctx.globalAlpha = sel == null || sel === tp.k ? 1 : 0.45;
+    ppill(`${tp.k} · ${tp.words.slice(0, 3).map(o => o.w).join(' · ') || '단어 없음'}`, x, y - 26 * PZ, { fg: mix(tc(tp.k), '#FFFFFF', 0.45), stroke: rgba(tc(tp.k), 0.8) });
+  }
+  pctx.globalAlpha = 1;
+  // 문장을 놓는 중이면 손끝에 미리 보기
+  if (PG.place && PG.ptr) {
+    const [x, y] = PG.ptr;
+    pctx.beginPath(); pctx.arc(x, y, 9 * PZ, 0, Math.PI * 2); pctx.fillStyle = 'rgba(245,195,67,0.9)'; pctx.fill();
+    ppill(PG.place.text.length > 24 ? PG.place.text.slice(0, 23) + '…' : PG.place.text, x, y - 28 * PZ, { bg: 'rgba(245,195,67,0.95)', fg: '#1B1405' });
+  }
+}
+
+/* ---------- 놀이터 조작 ---------- */
+function pgPt(e) { const r = pcv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H, r]; }
+function pgHit(x, y) { let best = -1, bd = 15 * PZ; PG.docs.forEach((d, i) => { const [sx, sy] = pToS(d.x, d.y), dd = Math.hypot(sx - x, sy - y); if (dd < bd) { bd = dd; best = i; } }); return best; }
+function pgShowTip(i, x, y, r) {
+  const d = PG.docs[i], l = PG.res.L[i], tp = PG.res.byK[l];
+  pTip.innerHTML = `<div>${esc(d.text)}</div><div>${d.tokens.map(w => `<span class="tk">${esc(w)}</span>`).join('') || '<span class="tk">뽑힌 단어 없음</span>'}</div><div class="tp"><span class="dot" style="background:${tc(l)}"></span>${d.user ? '직접 놓은 문장 · ' : ''}${l < 0 ? '이상치 (-1)' : `토픽 ${l} · ${esc(tp.name)}`}</div>`;
+  pTip.hidden = false;
+  const px = x / W * r.width, py = y / H * r.height, w = pTip.offsetWidth, h = pTip.offsetHeight;
+  pTip.style.transform = `translate(${Math.round(clamp(px + 14, 6, r.width - w - 6))}px, ${Math.round(py - h - 12 < 6 ? py + 16 : py - h - 12)}px)`;
+}
+function pgCancelPlace() { PG.place = null; $('pgMode').hidden = true; PG.dirty = true; }
+function pgRenderToks() {
+  $('pgToks').innerHTML = PG.toks.map((o, k) => `<button type="button" class="chipbtn" data-k="${k}" aria-pressed="${o.on}" title="${esc(o.w)}">${esc(o.t)}</button>`).join('');
+}
+function pgStartPlace() {
+  const text = $('pgText').value.trim();
+  if (!text) { $('pgText').focus(); return; }
+  if (!PG.toks.length) PG.toks = guessTokens(text);
+  PG.place = { text, tokens: [...new Set(PG.toks.filter(o => o.on).map(o => o.t))] };
+  $('pgMode').hidden = false; pcv.focus(); PG.dirty = true;
+}
+pcv.addEventListener('pointerdown', e => {
+  const [x, y] = pgPt(e);
+  if (PG.place) {
+    const [dx, dy] = pFromS(x, y);
+    PG.docs.push({ text: PG.place.text, tokens: PG.place.tokens, x: dx, y: dy, user: true });
+    pgCancelPlace(); $('pgText').value = ''; PG.toks = []; pgRenderToks();
+    pgRun();
+    const l = PG.res.L[PG.docs.length - 1]; PG.sel = l; PG.sig = ''; pgRun();
+    return;
+  }
+  const i = pgHit(x, y);
+  if (i >= 0) { PG.drag = { i, sx: x, sy: y, moved: false }; pcv.setPointerCapture(e.pointerId); }
+});
+pcv.addEventListener('pointermove', e => {
+  const [x, y, r] = pgPt(e); PG.ptr = [x, y];
+  if (PG.drag) {
+    const d = PG.drag;
+    if (!d.moved && Math.hypot(x - d.sx, y - d.sy) > 4) d.moved = true;
+    if (d.moved) { const [dx, dy] = pFromS(x, y); PG.docs[d.i].x = dx; PG.docs[d.i].y = dy; PG.need = true; pgShowTip(d.i, x, y, r); }
+  } else {
+    const i = pgHit(x, y);
+    if (i !== PG.hover) { PG.hover = i; PG.dirty = true; }
+    if (i >= 0 && !PG.place) pgShowTip(i, x, y, r); else pTip.hidden = true;
+  }
+  if (PG.place) PG.dirty = true;
+  pcv.style.cursor = PG.place ? 'crosshair' : PG.drag && PG.drag.moved ? 'grabbing' : PG.hover >= 0 ? 'grab' : 'default';
+});
+pcv.addEventListener('pointerup', () => {
+  const d = PG.drag; PG.drag = null; if (!d) return;
+  if (!d.moved) { const l = PG.res.L[d.i]; PG.sel = PG.sel === l ? null : l; PG.sig = ''; pgRun(); }
+});
+pcv.addEventListener('pointerleave', () => { if (!PG.drag) { PG.hover = -1; PG.ptr = null; pTip.hidden = true; PG.dirty = true; } });
+pcv.addEventListener('dblclick', e => {
+  const [x, y] = pgPt(e), i = pgHit(x, y); if (i < 0) return;
+  PG.docs.splice(i, 1); PG.hover = -1; pTip.hidden = true; pgRun();
+});
+pcv.addEventListener('keydown', e => { if (e.key === 'Escape') pgCancelPlace(); });
+$('pgMcs').addEventListener('input', e => {
+  PG.mcs = +e.target.value; $('pgMcsV').textContent = PG.mcs;
+  if (PG.msAuto) { PG.ms = PG.mcs; $('pgMs').value = PG.mcs; $('pgMsV').textContent = PG.mcs; }
+  pgRun();
+});
+$('pgMs').addEventListener('input', e => { PG.ms = +e.target.value; $('pgMsV').textContent = PG.ms; pgRun(); });
+$('pgMsAuto').addEventListener('change', e => {
+  PG.msAuto = e.target.checked; $('pgMs').disabled = PG.msAuto;
+  if (PG.msAuto) { PG.ms = PG.mcs; $('pgMs').value = PG.mcs; $('pgMsV').textContent = PG.mcs; }
+  PG.sig = ''; pgRun();
+});
+$('pgNr').addEventListener('change', e => { PG.nr = +e.target.value; PG.sig = ''; pgRun(); });
+$('pgRed').addEventListener('change', e => { PG.red = e.target.checked; PG.sig = ''; pgRun(); });
+$('pgReset').addEventListener('click', pgReset);
+$('pgPlace').addEventListener('click', pgStartPlace);
+$('pgText').addEventListener('input', e => { PG.toks = guessTokens(e.target.value); pgRenderToks(); });
+$('pgText').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pgStartPlace(); } });
+$('pgToks').addEventListener('click', e => {
+  const b = e.target.closest('.chipbtn'); if (!b) return;
+  const o = PG.toks[+b.dataset.k]; o.on = !o.on; b.setAttribute('aria-pressed', String(o.on));
+  if (PG.place) PG.place.tokens = [...new Set(PG.toks.filter(x => x.on).map(x => x.t))];
+});
+$('pgSamples').innerHTML = ['손흥민이 두 골을 넣었다', '화성 탐사선이 사진을 보냈다', '고양이 사료를 바꿨다', '금리가 또 올랐다', '마늘 소스 파스타 레시피', '오늘 점심 뭐 먹지'].map(t => `<button type="button" class="chipbtn">${t}</button>`).join('');
+$('pgSamples').addEventListener('click', e => {
+  const b = e.target.closest('.chipbtn'); if (!b) return;
+  $('pgText').value = b.textContent; PG.toks = guessTokens(b.textContent); pgRenderToks(); pgStartPlace();
+});
+$('pgInfo').addEventListener('click', e => {
+  const b = e.target.closest('.pick'); if (!b) return;
+  const k = +b.dataset.k; PG.sel = PG.sel === k ? null : k; PG.sig = ''; pgRun();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && PG.place) pgCancelPlace(); });
+function pgLoop() {
+  if (PG.need) { PG.need = false; pgRun(); }
+  if (PG.dirty) { PG.dirty = false; pgDraw(); }
+  requestAnimationFrame(pgLoop);
+}
+
+/* =========================================================
+   10. 퀴즈
+   ========================================================= */
+// 그림 문제: 세 무리와 외딴 점 하나. 이상치 판정은 이 페이지의 HDBSCAN이 직접 한다.
+const QZ = (() => {
+  const r = mulberry32(31), pts = [];
+  const g = () => { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.max(-1.8, Math.min(1.8, Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v))); };
+  [[110, 70], [285, 62], [215, 142]].forEach(([cx, cy]) => { for (let k = 0; k < 7; k++) pts.push([cx + g() * 16, cy + g() * 13]); });
+  const lone = pts.length; pts.push([352, 160]);
+  const L = hdbscan(pts, 4);
+  // 보기: 외딴 점 + 각 무리에서 가장자리에 있는 점(그래도 무리에 속한 점)
+  const cand = [lone];
+  [0, 1, 2].forEach(gi => {
+    const ids = [0, 1, 2, 3, 4, 5, 6].map(k => gi * 7 + k).filter(i => L[i] >= 0);
+    const cx = ids.reduce((s, i) => s + pts[i][0], 0) / ids.length, cy = ids.reduce((s, i) => s + pts[i][1], 0) / ids.length;
+    cand.push(ids.sort((a, b) => Math.hypot(pts[b][0] - cx, pts[b][1] - cy) - Math.hypot(pts[a][0] - cx, pts[a][1] - cy))[0]);
+  });
+  const order = [2, 0, 3, 1].map(k => cand[k]); // 보기 순서 섞기 (A~D)
+  return { pts, L, cand: order, answer: order.indexOf(lone), ok: L[lone] < 0 && order.every(i => i === lone || L[i] >= 0) };
+})();
+const QS = [
+  { q: 'BERTopic이 토픽을 찾는 네 단계의 순서로 맞는 것은?', opts: ['군집화 → 임베딩 → c-TF-IDF → 차원 축소', '차원 축소 → 임베딩 → 군집화 → c-TF-IDF', '임베딩 → 차원 축소 → 군집화 → c-TF-IDF', 'c-TF-IDF → 임베딩 → 차원 축소 → 군집화'], a: 2, why: '숫자로 바꾸고(임베딩) → 펼치고(UMAP) → 무리 짓고(HDBSCAN) → 이름 붙이기(c-TF-IDF).' },
+  { q: '‘강아지와 공원을 산책했다’와 ‘반려견이랑 동네 한 바퀴 돌았다’는 겹치는 단어가 없는데도 임베딩이 아주 가까워요. 왜일까요?', opts: ['두 문장의 길이가 비슷해서', '언어 모델이 뜻이 비슷하면 숫자도 비슷해지도록 문장을 요약해서', '같은 글자가 많이 들어 있어서', '우연히 그렇게 된 것'], a: 1, why: '문장 임베딩 모델은 단어가 아니라 뜻을 숫자로 요약해요. 그래서 표현이 달라도 뜻이 비슷하면 가까워져요.' },
+  { q: 'UMAP이 하는 일은?', opts: ['문서를 토픽으로 나눈다', '단어가 나온 횟수를 센다', '토픽에 이름을 붙인다', '이웃 관계를 지키면서 차원을 줄인다'], a: 3, why: '말린 종이를 펴듯이, 가까웠던 점은 펼친 뒤에도 가깝게 남도록 차원을 줄여요.' },
+  { q: 'BERTopic에서 UMAP의 기본 n_components(줄인 뒤의 차원 수)는?', opts: ['2', '5', '15', '384'], a: 1, why: '영상 그림은 보기 쉽게 2차원이지만 기본값은 5차원이에요. 15는 n_neighbors, 384는 임베딩의 차원이에요.' },
+  { q: '이 지도에 min_cluster_size=4로 HDBSCAN을 돌리면, A~D 중 어느 점이 이상치(-1)로 남을까요? 점을 누르거나 아래 단추를 고르세요.', canvas: true, a: QZ.answer, why: '빽빽한 섬에서 멀리 떨어진 외딴 점은 어느 군집에도 넣지 않고 -1로 남겨요. 섬 가장자리에 있어도 무리 가까이 있는 점은 그 섬에 들어가요.' },
+  { q: 'HDBSCAN으로 군집을 찾을 때의 장점은?', opts: ['모든 문서가 반드시 어느 토픽엔가 들어간다', '단어 수를 대신 세어 준다', '토픽 개수를 미리 정하지 않아도 된다', '임베딩이 필요 없다'], a: 2, why: '빽빽한 곳을 스스로 찾기 때문에 토픽 개수를 정할 필요가 없어요. 대신 어디에도 속하지 않는 문서는 이상치로 남아요.' },
+  { q: 'min_cluster_size를 크게 하면 보통 어떻게 될까요?', opts: ['토픽 수가 늘어난다', '이상치가 모두 사라진다', '토픽 이름만 바뀐다', '작은 섬이 토픽이 되지 못해 토픽 수가 줄어든다'], a: 3, why: '최소 크기보다 작은 무리는 토픽이 될 수 없어서, 이웃 섬에 합쳐지거나 이상치가 돼요. 놀이터에서 직접 바꿔 보세요.' },
+  { q: '축구 섬에서 ‘골’은 5번, ‘오늘’은 4번 나왔어요. ‘오늘’은 모든 섬에 두루 나와요. 이름표로 더 알맞은 단어는?', opts: ['오늘: 전체에서 가장 많이 나와서', '둘 다 점수가 같다', '골: 이 섬에서 자주 나오고 다른 섬에는 드물어서 c-TF-IDF 점수가 높다', '오늘: 문장 맨 앞에 자주 나와서'], a: 2, why: 'IDF가 여러 섬에 두루 나오는 흔한 단어의 점수를 깎아요. 이 섬에서 자주, 다른 섬에서 드물게 나오는 단어가 이름표가 돼요.' },
+  { q: 'c-TF-IDF는 무엇을 하나의 ‘문서’로 보고 단어 점수를 계산할까요?', opts: ['한 토픽(섬)의 문서를 모두 이어 붙인 큰 문서', '문장 하나하나', '전체 문서 모음 한 덩어리', '단어 하나'], a: 0, why: '클래스(토픽)별로 문서를 합쳐 큰 문서를 만든 뒤 계산해서 이름에 c(class)가 붙었어요.' },
+  { q: '한국어 문서에서 토픽 이름을 깔끔하게 만드는 좋은 방법은?', opts: ['min_cluster_size를 1로 한다', '임베딩 단계를 뺀다', '문서를 모두 영어로 번역한다', '형태소 분석기로 명사만 세도록 vectorizer_model을 바꾼다'], a: 3, why: 'CountVectorizer(tokenizer=okt.nouns)처럼 명사만 세면 조사나 어미가 이름표에 끼지 않아요.' }
+];
+if (!QZ.ok) console.warn('퀴즈 5번: HDBSCAN 결과와 정답 표시가 맞지 않아요. 점 좌표를 확인하세요.');
+const QST = QS.map(() => ({ done: false, ok: false, pick: null }));
+function qzDraw(cv, st) {
+  const g = cv.getContext('2d'), sc = cv.width / 400;
+  g.setTransform(sc, 0, 0, sc, 0, 0);
+  g.fillStyle = '#0A1520'; g.fillRect(0, 0, 400, 200);
+  g.fillStyle = 'rgba(140,180,210,0.08)'; for (let x = 10; x < 400; x += 20) for (let y = 10; y < 200; y += 20) g.fillRect(x - 0.5, y - 0.5, 1, 1);
+  QZ.pts.forEach((p, i) => {
+    const ci = QZ.cand.indexOf(i);
+    let col = '#DCE8F2';
+    if (st.done && QZ.L[i] >= 0) col = tc(QZ.L[i]);
+    g.beginPath(); g.arc(p[0], p[1], ci >= 0 ? 5 : 4, 0, Math.PI * 2);
+    if (st.done && QZ.L[i] < 0) { g.fillStyle = '#0E1D2C'; g.fill(); g.strokeStyle = '#9FB0C0'; g.lineWidth = 1.4; g.stroke(); }
+    else { g.fillStyle = col; g.fill(); }
+    if (ci >= 0) {
+      const L = 'ABCD'[ci], hov = cv._hover === ci && !st.done;
+      g.beginPath(); g.arc(p[0], p[1], 9, 0, Math.PI * 2); g.strokeStyle = st.done && ci === QZ.answer ? '#7BE0A6' : st.done && ci === st.pick ? '#FF8E8E' : hov ? '#7CC4F2' : 'rgba(245,195,67,0.9)'; g.lineWidth = 1.6; g.stroke();
+      g.font = fnt(11, 700); g.fillStyle = '#F5C343'; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(L, p[0] + 11, p[1] - 9);
+    }
+  });
+}
+function qzRender() {
+  const root = $('quizList'); root.innerHTML = '';
+  QS.forEach((q, qi) => {
+    const st = QST[qi], li = document.createElement('li');
+    li.className = 'q' + (st.done ? (st.ok ? ' ok' : ' no') : '');
+    li.innerHTML = `<p class="qt"><span class="qn">Q${qi + 1}</span>${esc(q.q)}</p>`;
+    let opts = q.opts;
+    if (q.canvas) {
+      const cv = document.createElement('canvas'); cv.width = 800; cv.height = 400; cv.className = 'qcv';
+      cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', '점 22개가 세 무리와 외딴 점으로 흩어진 지도. A부터 D까지 표시된 점 중 하나를 고르는 문제');
+      const pick = e => { const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 400, y = (e.clientY - r.top) / r.height * 200; return QZ.cand.findIndex(i => Math.hypot(QZ.pts[i][0] - x, QZ.pts[i][1] - y) < 13); };
+      cv.addEventListener('mousemove', e => { const k = pick(e); if (k !== cv._hover) { cv._hover = k; qzDraw(cv, st); } cv.style.cursor = k >= 0 && !st.done ? 'pointer' : 'default'; });
+      cv.addEventListener('click', e => { const k = pick(e); if (k >= 0) qzAnswer(qi, k); });
+      li.appendChild(cv); qzDraw(cv, st);
+      opts = ['A', 'B', 'C', 'D'];
+    }
+    const box = document.createElement('div'); box.className = q.canvas ? 'qopts qkeys' : 'qopts';
+    opts.forEach((o, oi) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = o;
+      if (st.done) { b.disabled = true; if (oi === q.a) b.classList.add('right'); else if (oi === st.pick) b.classList.add('wrong'); }
+      b.addEventListener('click', () => qzAnswer(qi, oi));
+      box.appendChild(b);
+    });
+    li.appendChild(box);
+    if (st.done) { const p = document.createElement('p'); p.className = 'qwhy'; p.innerHTML = `<b>${st.ok ? '정답!' : '아쉬워요.'}</b> ${esc(q.why)}`; li.appendChild(p); }
+    root.appendChild(li);
+  });
+  const done = QST.filter(s => s.done).length, ok = QST.filter(s => s.ok).length;
+  $('quizScore').textContent = done === QS.length
+    ? `${ok} / ${QS.length} 맞혔어요. ${ok === QS.length ? 'BERTopic의 네 단계를 모두 이해했네요!' : ok >= 7 ? '거의 다 왔어요. 틀린 문제의 해설을 읽어 보세요.' : '영상의 해당 장면을 다시 보고 도전해 보세요.'}`
+    : `${done} / ${QS.length} 문제 풀이 · ${ok}개 정답`;
+}
+function qzAnswer(qi, pick) {
+  const st = QST[qi]; if (st.done) return;
+  Object.assign(st, { done: true, pick, ok: pick === QS[qi].a }); qzRender();
+}
+$('quizReset').addEventListener('click', () => { QST.forEach(s => Object.assign(s, { done: false, ok: false, pick: null })); qzRender(); });
+
+/* =========================================================
+   11. 시작
+   ========================================================= */
+if (!EXPORT) new ResizeObserver(() => resize()).observe($('screen'));
+resize();
+syncUI();
+requestAnimationFrame(loop);
+if (!EXPORT) {
+  new ResizeObserver(() => pgResize()).observe(pcv);
+  pgResize(); pgReset(); requestAnimationFrame(pgLoop);
+  qzRender();
+  if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', () => { PG.dirty = true; });
+}
+const fontsReady = Promise.all([
+  [700, FD], [800, FD], [400, FB], [500, FB], [600, FB], [700, FB], [400, FM], [500, FM]
+].map(([w, f]) => document.fonts.load(`${w} 20px ${f}`, ALLTEXT).catch(() => null))).then(() => document.fonts.ready).then(() => { WRAP.clear(); segCache.clear(); rowsCache.key = ''; dirty = true; });
+window.BT = {
+  duration: C.end, ready: fontsReady,
+  renderAt(t) { started = true; pCache.t = -1; cloudCache.t = -1; render(t); },
+  frame(t, q = 0.9) { this.renderAt(t); return cv.toDataURL('image/jpeg', q); }
+};
+})();
+</script>
+</body>
+</html>
