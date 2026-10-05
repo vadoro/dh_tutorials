@@ -47,5 +47,18 @@ window.DH_CATALOG = {
       video: 'bertopic/video/bertopic-explainer.mp4',
       added: '2026-10-02',
     },
+    {
+      slug: 'tf-idf',
+      title: '단어의 무게, 문서의 거리',
+      topic: 'TF-IDF · 문서 유사도',
+      summary: '고전 소설 여섯 편의 줄거리로 TF, IDF, TF-IDF를 계산해 문서마다 독특한 단어를 찾고, 문서를 벡터로 바꿔 코사인 유사도와 유클리드 거리로 문서 사이의 관계를 재 봅니다.',
+      length: '5:56',
+      scenes: 11,
+      features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
+      tags: ['텍스트 데이터'],
+      thumb: 'tf-idf/docs/poster.jpg',
+      video: 'tf-idf/video/tf-idf.mp4',
+      added: '2026-10-05',
+    },
   ],
 };

@@ -25,6 +25,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 지금 있는 튜토리얼
 - `network-analysis/` 점과 선의 과학 — 여러 파일(`assets/js/*.js`), 장면은 `scenes-a.js`, `scenes-b.js`
 - `bertopic/` BERTopic 토픽 지도 — `index.html` 한 파일에 모두 들어 있음
+- `tf-idf/` 단어의 무게, 문서의 거리 — 템플릿에서 시작. 계산 `assets/js/corpus.js`, 장면 `assets/js/scenes.js`, 페이지 동작 `assets/js/app.js`
 - `_template/` 템플릿 — `catalog.js`에 없으므로 첫 화면·상단 바 메뉴에 나오지 않음. 주소로는 열림(`_template/index.html`)
 
 두 폴더는 원래 `vadoro/network_tutorial`, `vadoro/bertopic_tutorial` 저장소였고 `git subtree`로 커밋 기록과 함께 옮겼습니다.
@@ -58,7 +59,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 
 ## 튜토리얼 페이지가 갖출 것
 
-`_template/index.html`이 아래를 모두 갖춘 최소 예시이고, 기존 두 튜토리얼이 큰 예시입니다.
+`_template/index.html`이 아래를 모두 갖춘 최소 예시이고, 기존 튜토리얼들이 큰 예시입니다. 템플릿에서 시작해 파일을 나눈 예는 `tf-idf/`예요.
 
 - **영상 플레이어**: 캔버스 무대(16:9, 논리 좌표 1280×720), 재생/일시정지, 진행 막대와 장 눈금, 장 목록, 속도, 자막 켜기/끄기, 전체 화면, 단축키(스페이스, ← →, C, F, V).
   - 그림은 **시간 t만의 함수**로 그립니다. 같은 t면 언제나 같은 그림(난수는 시드 고정, 예: mulberry32). 그래야 되감기와 MP4 추출이 정확합니다.
@@ -126,7 +127,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
   추출 모드에서는 상단 바·플레이어 단추·놀이터를 만들지 않고, 같은 t에 언제나 같은 그림을 돌려줘야 합니다.
 - 기존 튜토리얼의 자체 렌더러도 그대로 동작합니다: `network-analysis/tools/render-video.cjs`(`?render`), `bertopic/tools/render-video.mjs`.
 - 프록시 환경에서 헤드리스 브라우저가 Google Fonts 인증서를 믿지 못하면, 렌더러가 글꼴 요청을 Node `fetch`로 대신 받아 넘깁니다(`NODE_USE_ENV_PROXY=1`과 함께 실행). TLS 검증을 끄지 마세요.
-- 새 MP4는 되도록 GitHub Releases에 올리고 `catalog.js`의 `video`에 그 주소를 적습니다(저장소가 무거워지지 않게). **Git LFS는 쓰지 마세요** — GitHub Pages가 LFS 파일을 내보내지 못합니다. 기존 두 영상은 커밋 기록에 이미 들어 있어 그대로 둡니다.
+- 새 MP4는 되도록 GitHub Releases에 올리고 `catalog.js`의 `video`에 그 주소를 적습니다(저장소가 무거워지지 않게). **Git LFS는 쓰지 마세요** — GitHub Pages가 LFS 파일을 내보내지 못합니다. 지금까지의 세 영상(network-analysis, bertopic, tf-idf)은 저장소에 들어 있어 그대로 둡니다.
 
 ## 확인 (커밋 전에)
 
