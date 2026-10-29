@@ -60,5 +60,18 @@ window.DH_CATALOG = {
       video: 'tf-idf/video/tf-idf.mp4',
       added: '2026-10-05',
     },
+    {
+      slug: 'sentiment-analysis',
+      title: '글에 담긴 마음',
+      topic: '감정분석',
+      summary: '감성 사전과 부정·강조·대조 규칙으로 점수를 매기는 법, 나이브 베이즈로 서평에서 낱말의 무게를 배우는 법, 시험 데이터로 정확도를 재는 법, 흥부전의 감정 곡선까지 따라갑니다.',
+      length: '5:26',
+      scenes: 10,
+      features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
+      tags: ['텍스트 데이터'],
+      thumb: 'sentiment-analysis/docs/poster.jpg',
+      video: 'sentiment-analysis/video/sentiment-analysis.mp4',
+      added: '2026-10-29',
+    },
   ],
 };
