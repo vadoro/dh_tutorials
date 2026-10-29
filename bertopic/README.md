@@ -6,7 +6,7 @@ BERTopic 토픽 모델링의 원리를 아주 쉽게 설명하는 **인터랙티
 짧은 한국어 문장 90개가 "숫자 → 지도 → 섬 → 이름표"로 바뀌는 과정을 3분 46초 동안 따라갑니다.
 
 - `index.html`: 인터랙티브 버전. 브라우저로 열면 바로 재생돼요. 설치할 것은 없습니다. 영상 아래에 **놀이터**, **퀴즈**, **용어집**이 이어져요.
-- `video/bertopic-explainer.mp4`: 같은 애니메이션을 녹화한 1080p 영상(자막 포함). 수업이나 발표에 그대로 쓸 수 있어요.
+- [`bertopic-explainer.mp4` 내려받기](https://github.com/vadoro/dh_tutorials/releases/download/videos/bertopic-explainer.mp4): 같은 애니메이션을 녹화한 1080p 영상(자막 포함). [GitHub Releases](https://github.com/vadoro/dh_tutorials/releases/tag/videos)에 있어요. 수업이나 발표에 그대로 쓸 수 있어요.
 
 ## 장면 구성
 
@@ -62,6 +62,8 @@ node tools/render-video.mjs video/bertopic-explainer.mp4 30
 # ffmpeg가 PATH에 없다면: FFMPEG=/path/to/ffmpeg node tools/render-video.mjs
 # 일부 장면만 이미지로 확인: FRAMES="6.2,100,150" node tools/render-video.mjs
 ```
+
+새로 뽑은 MP4는 저장소에 커밋하지 않고 GitHub Releases의 `videos` 릴리스에 올립니다. 올리는 법은 [`.github/workflows/upload-videos.yml`](../.github/workflows/upload-videos.yml) 맨 위에 있어요.
 
 스크립트는 `index.html#export`를 열어 시간마다 캔버스를 그린 뒤 프레임을 ffmpeg로 넘깁니다. 애니메이션이 시간의 함수로만 그려지기 때문에 녹화 결과가 매번 똑같아요.
 

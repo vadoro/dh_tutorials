@@ -17,7 +17,8 @@ _template/index.html    새 튜토리얼의 출발점. 한 파일에 모든 기�
 tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리얼을 MP4·SRT·미리보기 그림으로
 <slug>/index.html       튜토리얼 본체. 폴더 안에서 완결됨
 <slug>/docs/poster.jpg  카드 미리보기 그림 1280×720
-<slug>/video/*.mp4      수업용 영상 (자막 포함, 장 표시)
+<slug>/video/*.srt      자막 원고. MP4(자막 포함, 장 표시)는 저장소가 아니라 GitHub Releases의 videos 릴리스에
+.github/workflows/upload-videos.yml  MP4를 videos 릴리스에 올리는 워크플로 (Actions에서 손으로 실행)
 <slug>/tools/           그 튜토리얼의 영상 렌더러 등
 .nojekyll               GitHub Pages가 _로 시작하는 폴더도 그대로 내보내도록
 ```
@@ -53,7 +54,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
    - 장면이 많아지면 network-analysis처럼 `assets/js/` 여러 파일로 나눠도 됩니다. 공통 부품과 `DH_EXPORT` 약속만 지키면 됩니다.
 3. `assets/catalog.js`의 `tutorials` 배열에 항목을 추가합니다(필드 설명은 파일 맨 위).
 4. 미리보기 그림을 만듭니다: `node tools/render-video.cjs <slug> --poster <대표 장면 초>` → `<slug>/docs/poster.jpg`(1280×720).
-5. 영상을 렌더링합니다: `node tools/render-video.cjs <slug>` → `<slug>/video/<slug>.mp4`와 `.srt`(아래 '영상' 참고).
+5. 영상을 렌더링합니다: `node tools/render-video.cjs <slug>` → `<slug>/video/<slug>.mp4`와 `.srt`. `.srt`만 커밋하고 MP4는 Releases에 올린 뒤 `catalog.js`의 `video`에 그 주소를 적습니다(아래 '영상' 참고).
 6. `<slug>/README.md`에 장면 구성, 조작법, 진짜 계산/비유 구분, 영상 다시 만드는 법을 적습니다.
 7. 루트 `README.md`의 튜토리얼 표에 한 줄 추가합니다.
 8. 아래 '확인'을 모두 통과시킨 뒤 커밋합니다.
@@ -128,7 +129,9 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
   추출 모드에서는 상단 바·플레이어 단추·놀이터를 만들지 않고, 같은 t에 언제나 같은 그림을 돌려줘야 합니다.
 - 기존 튜토리얼의 자체 렌더러도 그대로 동작합니다: `network-analysis/tools/render-video.cjs`(`?render`), `bertopic/tools/render-video.mjs`.
 - 프록시 환경에서 헤드리스 브라우저가 Google Fonts 인증서를 믿지 못하면, 렌더러가 글꼴 요청을 Node `fetch`로 대신 받아 넘깁니다(`NODE_USE_ENV_PROXY=1`과 함께 실행). TLS 검증을 끄지 마세요.
-- 새 MP4는 되도록 GitHub Releases에 올리고 `catalog.js`의 `video`에 그 주소를 적습니다(저장소가 무거워지지 않게). **Git LFS는 쓰지 마세요** — GitHub Pages가 LFS 파일을 내보내지 못합니다. 지금까지의 네 영상(network-analysis, bertopic, tf-idf, sentiment-analysis)은 저장소에 들어 있어 그대로 둡니다.
+- **MP4는 저장소에 커밋하지 않습니다**(`.gitignore`에 `*/video/*.mp4`). 모든 영상은 GitHub Releases의 `videos` 릴리스에 있고, 주소는 `https://github.com/vadoro/dh_tutorials/releases/download/videos/<파일 이름>.mp4`입니다. `catalog.js`의 `video`와 README 링크에 이 주소를 적습니다. **Git LFS는 쓰지 마세요** — GitHub Pages가 LFS 파일을 내보내지 못합니다.
+- 올리는 법: 렌더링한 MP4를 임시 브랜치(`upload-video`)에 `git add -f`로 커밋해 올리고, Actions의 '영상 올리기'(`.github/workflows/upload-videos.yml`)를 그 브랜치로 실행한 뒤(GitHub MCP `actions_run_trigger`, `workflow_id: upload-videos.yml`), 임시 브랜치를 지웁니다. 같은 이름의 파일은 바꿔 넣으므로 주소가 그대로입니다. 올린 뒤 `get_release_by_tag`(`videos`)의 `digest`와 로컬 `sha256sum`이 같은지 확인합니다.
+- 릴리스 파일은 브라우저에서 재생되지 않고 내려받아집니다(`Content-Disposition: attachment`). 그래서 링크 이름은 ‘MP4 내려받기’로 씁니다.
 
 ## 확인 (커밋 전에)
 

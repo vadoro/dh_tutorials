@@ -15,7 +15,6 @@ const args = process.argv.slice(2);
 const fragment = args.includes('--fragment');
 const outArg = args.indexOf('--out');
 const OUT = path.resolve(ROOT, outArg >= 0 ? args[outArg + 1] : 'dist/network-analysis.html');
-const VIDEO_URL = 'https://github.com/vadoro/dh_tutorials/raw/main/network-analysis/video/network-analysis.mp4';
 
 let html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -28,8 +27,6 @@ html = html.replace(/<link rel="stylesheet" href="\.\.\/shared\/([^"]+)">/g, (_,
 html = html.replace(/<script src="\.\.\/shared\/([^"]+)"><\/script>/g, (_, rel) => `<script>\n${readShared(rel).replace(/<\/script/gi, '<\\/script')}\n</script>`);
 html = html.replace(/<link rel="stylesheet" href="(assets\/[^"]+)">/g, (_, rel) => `<style>\n${read(rel)}\n</style>`);
 html = html.replace(/<script src="(assets\/[^"]+)"><\/script>/g, (_, rel) => `<script>\n${read(rel).replace(/<\/script/gi, '<\\/script')}\n</script>`);
-// 파일 하나만 옮겨 다닐 때는 상대 경로의 영상 파일이 없으므로 저장소 주소로 연결
-html = html.replace('href="video/network-analysis.mp4" data-video-link', `href="${VIDEO_URL}" target="_blank" rel="noopener" data-video-link`);
 
 if (fragment) {
   const title = (html.match(/<title>[\s\S]*?<\/title>/) || [''])[0];

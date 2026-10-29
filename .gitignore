@@ -3,3 +3,5 @@ dist/
 frames/
 .DS_Store
 __pycache__/
+# 영상은 GitHub Releases의 videos 릴리스에 둡니다 (.github/workflows/upload-videos.yml)
+*/video/*.mp4

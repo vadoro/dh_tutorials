@@ -12,7 +12,7 @@
 | --- | --- |
 | **웹 주소** | `https://vadoro.github.io/dh_tutorials/tf-idf/` |
 | **`index.html` 더블클릭** | 저장소를 내려받아 `tf-idf/index.html`을 열면 끝. 설치도, 서버도 필요 없어요. 인터넷이 없으면 글꼴만 기본 한글 글꼴로 바뀌어요. |
-| **MP4 영상** | [`video/tf-idf.mp4`](video/tf-idf.mp4) — 1080p, 자막 포함, 장(chapter) 표시. 자막 원고는 [`video/tf-idf.srt`](video/tf-idf.srt). |
+| **MP4 영상** | [`tf-idf.mp4` 내려받기](https://github.com/vadoro/dh_tutorials/releases/download/videos/tf-idf.mp4) ([GitHub Releases](https://github.com/vadoro/dh_tutorials/releases/tag/videos)) — 1080p, 자막 포함, 장(chapter) 표시. 자막 원고는 [`video/tf-idf.srt`](video/tf-idf.srt). |
 
 ## 무엇을 배우나요
 
@@ -84,7 +84,7 @@ assets/js/scenes.js     영상 장면 11개, 장 목록과 자막
 assets/js/app.js        플레이어, 직접 해 보기, 놀이터, 퀴즈, 영상 추출(DH_EXPORT)
 examples/classics.tsv   예시 문서 (제목, 명사, [명사] 표시한 줄거리)
 examples/tfidf_classics.py  같은 계산을 numpy·scikit-learn으로
-video/                  MP4와 자막 원고(SRT)
+video/                  자막 원고(SRT). MP4는 GitHub Releases에 있어요
 docs/poster.jpg         사이트 카드 그림
 ```
 
@@ -99,6 +99,8 @@ node tools/render-video.cjs tf-idf                   # → tf-idf/video/tf-idf.m
 node tools/render-video.cjs tf-idf --frames 52,186   # 몇 장면만 그림으로 → frames/tf-idf/
 node tools/render-video.cjs tf-idf --poster 327      # 카드 그림 → tf-idf/docs/poster.jpg
 ```
+
+새로 뽑은 MP4는 저장소에 커밋하지 않고 GitHub Releases의 `videos` 릴리스에 올립니다. 올리는 법은 [`.github/workflows/upload-videos.yml`](../.github/workflows/upload-videos.yml) 맨 위에 있어요.
 
 `index.html#export`로 열면 페이지가 추출 모드가 되어 정해진 시각의 장면을 그대로 그려요. 그림은 시각과 상태만으로 정해지므로 같은 시각이면 언제나 같은 그림이 나와요.
 

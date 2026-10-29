@@ -10,7 +10,7 @@
  * features  카드에 칩으로 보여 줄 기능
  * tags      첫 화면에서 거르는 데 쓰는 데이터 종류 (예: 관계 데이터, 텍스트 데이터, 이미지, 공간 데이터)
  * thumb     16:9 미리보기 그림 (사이트 루트 기준 경로)
- * video     MP4 파일 경로 또는 주소 (없으면 null)
+ * video     MP4 주소 — GitHub Releases의 videos 릴리스에 올린 파일 (없으면 null)
  * added     처음 올린 날짜 (YYYY-MM-DD)
  *
  * fetch() 대신 스크립트로 읽기 때문에 index.html을 더블클릭해 열어도 동작합니다.
@@ -31,7 +31,7 @@ window.DH_CATALOG = {
       features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
       tags: ['관계 데이터'],
       thumb: 'network-analysis/docs/poster.jpg',
-      video: 'network-analysis/video/network-analysis.mp4',
+      video: 'https://github.com/vadoro/dh_tutorials/releases/download/videos/network-analysis.mp4',
       added: '2026-10-01',
     },
     {
@@ -44,7 +44,7 @@ window.DH_CATALOG = {
       features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집'],
       tags: ['텍스트 데이터'],
       thumb: 'bertopic/docs/poster.jpg',
-      video: 'bertopic/video/bertopic-explainer.mp4',
+      video: 'https://github.com/vadoro/dh_tutorials/releases/download/videos/bertopic-explainer.mp4',
       added: '2026-10-02',
     },
     {
@@ -57,7 +57,7 @@ window.DH_CATALOG = {
       features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
       tags: ['텍스트 데이터'],
       thumb: 'tf-idf/docs/poster.jpg',
-      video: 'tf-idf/video/tf-idf.mp4',
+      video: 'https://github.com/vadoro/dh_tutorials/releases/download/videos/tf-idf.mp4',
       added: '2026-10-05',
     },
     {
@@ -70,7 +70,7 @@ window.DH_CATALOG = {
       features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
       tags: ['텍스트 데이터'],
       thumb: 'sentiment-analysis/docs/poster.jpg',
-      video: 'sentiment-analysis/video/sentiment-analysis.mp4',
+      video: 'https://github.com/vadoro/dh_tutorials/releases/download/videos/sentiment-analysis.mp4',
       added: '2026-10-29',
     },
   ],
