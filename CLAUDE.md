@@ -12,6 +12,7 @@ assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바 (섀도
 assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.js의 site.stats에 코드를 적으면 켜짐. 사이트 주소에서만 세고 file://·미리보기·추출 화면은 안 셈.
                         [data-dh-count="경로|TOTAL"] 요소에 방문 수를 보여 줌(첫 화면의 누적 방문, 카드별 방문, 튜토리얼 상단 바)
 assets/site.css         사이트 페이지 디자인 토큰(밝은/어두운 테마)
+assets/favicon.svg      파비콘 — 인장 붉은색 둥근 사각형에 흰 DH(글자는 도형으로 그려 글꼴과 무관). favicon.ico(16·32·48)와 assets/apple-touch-icon.png(180)는 이 그림에서 만든 것
 shared/narration.js     공통 부품: 음성 해설 (DH.narration)
 shared/quiz.js          공통 부품: 퀴즈 (DH.quiz)
 shared/components.css   공통 부품 모양: 퀴즈(.dhq), 용어집(.dh-gloss)
@@ -51,6 +52,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 1. 템플릿을 복사합니다: `cp -r _template <slug>`. slug는 영어 소문자와 `-` (예: `word-embedding`).
 2. 새 `index.html`에서 바꿀 곳(파일 맨 위 주석에도 적혀 있음)
    - `<script src="../assets/site-bar.js" data-slug="<slug>">`의 `data-slug` (바로 다음 줄의 `../assets/stats.js`는 그대로 둠)
+   - `<title>` 바로 아래 파비콘 세 줄(`../favicon.ico`, `../assets/favicon.svg`, `../assets/apple-touch-icon.png`)은 그대로 둠
    - `<title>`, 머리말, 각주(진짜 계산/비유 구분)
    - 스크립트 "2. 데이터와 진짜 계산", "3. 장면 정의"(`CHAPTERS`, `CAPTIONS`, `END`, `POSTER`), "5. 장면 그리기"(`SCENES`), "7. 직접 해 보기"(`LABS`), "9. 놀이터", "10. 퀴즈"(10문제), 용어집 마크업
    - 음성 해설의 약어 읽기(`read`), `DH_EXPORT.title`
