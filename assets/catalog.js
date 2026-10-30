@@ -18,6 +18,8 @@ window.DH_CATALOG = {
   site: {
     title: 'DH 튜토리얼',
     repo: 'https://github.com/vadoro/dh_tutorials',
+    // 방문자 통계 (assets/stats.js). goatcounter에 GoatCounter 코드를 적으면 켜지고, host 주소에서 연 페이지만 셉니다.
+    stats: { goatcounter: '', host: 'vadoro.github.io' },
   },
   tutorials: [
     {

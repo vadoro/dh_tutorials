@@ -3,6 +3,7 @@
  * 각 튜토리얼 index.html의 <body> 바로 다음에 넣습니다.
  *   <script src="../assets/catalog.js"></script>
  *   <script src="../assets/site-bar.js" data-slug="폴더이름"></script>
+ *   <script src="../assets/stats.js"></script>      (방문자 통계, assets/stats.js 참고)
  *
  * - 섀도 DOM 안에 그려서 튜토리얼마다 다른 CSS와 서로 섞이지 않습니다.
  * - 영상 추출 화면(#export, ?render)에는 넣지 않으므로 MP4 결과는 바뀌지 않습니다.

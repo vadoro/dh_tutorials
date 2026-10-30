@@ -9,6 +9,7 @@
 index.html              사이트 첫 화면 (카드 목록, assets/catalog.js를 읽어 그림)
 assets/catalog.js       튜토리얼 목록 — 첫 화면과 상단 바가 함께 씀 (단일 출처)
 assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바 (섀도 DOM, 추출 화면에서는 안 붙음)
+assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.js의 site.stats에 코드를 적으면 켜짐. 사이트 주소에서만 세고 file://·미리보기·추출 화면은 안 셈
 assets/site.css         사이트 페이지 디자인 토큰(밝은/어두운 테마)
 shared/narration.js     공통 부품: 음성 해설 (DH.narration)
 shared/quiz.js          공통 부품: 퀴즈 (DH.quiz)
@@ -47,7 +48,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 
 1. 템플릿을 복사합니다: `cp -r _template <slug>`. slug는 영어 소문자와 `-` (예: `word-embedding`).
 2. 새 `index.html`에서 바꿀 곳(파일 맨 위 주석에도 적혀 있음)
-   - `<script src="../assets/site-bar.js" data-slug="<slug>">`의 `data-slug`
+   - `<script src="../assets/site-bar.js" data-slug="<slug>">`의 `data-slug` (바로 다음 줄의 `../assets/stats.js`는 그대로 둠)
    - `<title>`, 머리말, 각주(진짜 계산/비유 구분)
    - 스크립트 "2. 데이터와 진짜 계산", "3. 장면 정의"(`CHAPTERS`, `CAPTIONS`, `END`, `POSTER`), "5. 장면 그리기"(`SCENES`), "7. 직접 해 보기"(`LABS`), "9. 놀이터", "10. 퀴즈"(10문제), 용어집 마크업
    - 음성 해설의 약어 읽기(`read`), `DH_EXPORT.title`

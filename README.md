@@ -27,6 +27,7 @@
 index.html              사이트 첫 화면 (튜토리얼 카드 목록)
 assets/catalog.js       튜토리얼 목록 — 새 튜토리얼은 여기에 한 항목 추가
 assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바
+assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음 — catalog.js의 site.stats에 코드를 적으면 켜짐)
 assets/site.css         사이트 페이지 디자인
 shared/                 튜토리얼이 함께 쓰는 부품: 음성 해설, 퀴즈, 퀴즈·용어집 모양
 _template/              새 튜토리얼의 출발점 (복사해서 씀, 사이트 목록에는 안 나옴)
