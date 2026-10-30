@@ -13,6 +13,7 @@
  *   GoatCounter 설정의 'Allow adding visitor counts on your website'를 켜야 숫자가 옵니다.
  *   숫자를 못 받거나 0이면 숨긴 채로 둡니다. GoatCounter가 숫자를 최대 4시간 동안 캐시해요.
  *   카드처럼 나중에 그리는 요소는 그린 뒤 window.DH_STATS.fill(감싼 요소)를 부릅니다.
+ *   튜토리얼 상단 바(site-bar.js, 섀도 DOM) 안의 방문 수도 여기서 채웁니다.
  */
 (function () {
   'use strict';
@@ -52,6 +53,11 @@
   window.DH_STATS = { fill: fill };
 
   // 통계를 켠 페이지에만 안내 문구를 보여 줌 (data-dh-stats)
-  var show = function () { document.querySelectorAll('[data-dh-stats]').forEach(function (el) { el.hidden = false; }); fill(); };
+  var show = function () {
+    document.querySelectorAll('[data-dh-stats]').forEach(function (el) { el.hidden = false; });
+    fill();
+    var bar = document.getElementById('dh-site-bar');
+    if (bar && bar.shadowRoot) fill(bar.shadowRoot);
+  };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', show); else show();
 })();

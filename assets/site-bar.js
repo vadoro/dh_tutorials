@@ -44,6 +44,8 @@
     '.here b{font-weight:600}' +
     '.here span{color:var(--muted);margin-left:6px}' +
     '.sp{flex:1}' +
+    '.visits{color:var(--muted);font-size:13px;white-space:nowrap}' +
+    '.visits b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}' +
     'details{position:relative}' +
     'summary{list-style:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer;white-space:nowrap;font-weight:600;font-size:13px}' +
     'summary::-webkit-details-marker{display:none}' +
@@ -64,6 +66,7 @@
     '<a class="home" href="' + esc(root + 'index.html') + '"><span class="mark" aria-hidden="true">DH</span>' + esc(cat.site.title) + '</a>' +
     (cur ? '<span class="sep" aria-hidden="true">/</span><span class="here"><b>' + esc(cur.title) + '</b><span>' + esc(cur.topic) + '</span></span>' : '') +
     '<span class="sp"></span>' +
+    (cur ? '<span class="visits" data-dh-count="./" hidden>방문 <b data-n></b>회</span>' : '') +   // 숫자는 assets/stats.js가 채움
     '<details><summary>다른 튜토리얼 <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></summary>' +
     '<ul class="menu">' +
     cat.tutorials.map(function (t) {
