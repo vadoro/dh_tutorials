@@ -12,7 +12,6 @@
 | 방법 | 설명 |
 | --- | --- |
 | **`index.html` 더블클릭** | 저장소를 내려받아 `index.html`을 열면 끝. 설치도, 서버도 필요 없습니다. 인터넷이 없으면 글꼴만 기본 한글 글꼴로 바뀌어요. |
-| **MP4 영상** | [`network-analysis.mp4` 내려받기](https://github.com/vadoro/dh_tutorials/releases/download/videos/network-analysis.mp4) ([GitHub Releases](https://github.com/vadoro/dh_tutorials/releases/tag/videos)) — 1080p, 자막 포함, 장(chapter) 표시. 수업 자료나 유튜브용. 자막 원고는 [`video/network-analysis.srt`](video/network-analysis.srt). |
 | **웹 주소로 공유** | [DH 튜토리얼](../README.md) 사이트의 한 꼭지로 `https://vadoro.github.io/dh_tutorials/network-analysis/` 에서 열립니다 (저장소에서 GitHub Pages를 켠 뒤). |
 | **파일 하나로 공유** | `node tools/build-standalone.cjs` → `dist/network-analysis.html` 한 파일에 모든 것이 들어갑니다. 메일·메신저로 보내기 좋아요. |
 
@@ -82,7 +81,7 @@ assets/js/quiz.js          퀴즈 문제 (화면은 사이트 공통 부품이 �
 examples/                  NetworkX 예제 코드와 CSV
 tools/render-video.cjs     MP4로 내보내기
 tools/build-standalone.cjs 파일 하나짜리 HTML 만들기
-video/                     자막 원고(SRT). MP4는 GitHub Releases에 있어요
+video/                     자막 원고(SRT)
 docs/                      README 그림
 ```
 
@@ -98,7 +97,7 @@ npm run render:preview    # 빠른 미리보기 (1280×720, 24fps)
 node tools/render-video.cjs --from 198 --to 264 --out video/centrality.mp4   # 원하는 구간만
 ```
 
-새로 뽑은 MP4는 저장소에 커밋하지 않고 GitHub Releases의 `videos` 릴리스에 올립니다. 올리는 법은 [`.github/workflows/upload-videos.yml`](../.github/workflows/upload-videos.yml) 맨 위에 있어요.
+MP4는 사이트에 올리지 않아요. 방문자는 인터랙티브 페이지로 보게 하려는 것이에요. 수업 등에 직접 쓰려고 뽑은 MP4는 저장소에 커밋하지 말고, 보관하려면 '영상 보관' 워크플로([`.github/workflows/keep-videos.yml`](../.github/workflows/keep-videos.yml))로 주인만 보는 비공개 릴리스에 넣으세요.
 
 사이트 공통 렌더러로도 똑같이 뽑을 수 있어요. 저장소 루트에서 `node tools/render-video.cjs network-analysis`.
 

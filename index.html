@@ -29,7 +29,6 @@
       <li>자막과 음성 해설</li>
       <li>장면마다 직접 해 보기</li>
       <li>놀이터 · 퀴즈 · 용어집</li>
-      <li>수업용 MP4 영상</li>
     </ul>
   </section>
 
@@ -49,7 +48,7 @@
   <section class="about" id="how" aria-label="이용 방법">
     <div>
       <h3>수업에서 쓰기</h3>
-      <p>인터랙티브 페이지를 띄워 놓고 장면마다 멈춰 설명하거나, MP4 영상을 그대로 틀어도 됩니다. 영상에는 자막과 장(chapter) 표시가 들어 있어요.</p>
+      <p>인터랙티브 페이지를 띄워 놓고 장면마다 멈춰 설명하거나, 음성 해설을 켜고 처음부터 틀어 두어도 됩니다. 장(chapter) 목록을 눌러 원하는 장면으로 바로 갈 수 있어요.</p>
     </div>
     <div>
       <h3>인터넷 없이 보기</h3>
@@ -76,7 +75,6 @@
     return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
   };
   var PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>';
-  var FILM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z" fill="currentColor" stroke="none"/></svg>';
 
   var tags = [];
   cat.tutorials.forEach(function (t) { t.tags.forEach(function (g) { if (tags.indexOf(g) < 0) tags.push(g); }); });
@@ -95,7 +93,6 @@
         '<ul class="feats" aria-label="기능">' + t.features.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
         '<div class="actions">' +
           '<a class="btn" href="' + esc(url) + '">' + PLAY + '인터랙티브로 보기</a>' +
-          (t.video ? '<a class="btn ghost" href="' + esc(t.video) + '" target="_blank" rel="noopener">' + FILM + 'MP4 내려받기</a>' : '') +
         '</div>' +
       '</div></li>';
   }

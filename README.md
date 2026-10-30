@@ -14,13 +14,12 @@
 | [단어의 무게, 문서의 거리](tf-idf/) | TF-IDF · 문서 유사도 | 5:56 · 11장면 | 단어 가방과 문서-단어 행렬, TF, DF와 IDF, TF-IDF 특징어, 벡터, 유클리드 거리, 코사인 유사도, L2 정규화, 유사도 표와 네트워크 |
 | [글에 담긴 마음](sentiment-analysis/) | 감정분석 | 5:26 · 10장면 | 긍정·부정과 점수, 감성 사전, 부정·강조·대조 규칙, 사전의 한계, 나이브 베이즈와 라플라스 스무딩, 시험 데이터와 정확도, 언어 모델, 감정 곡선과 이동 평균 |
 
-모든 튜토리얼에 자막과 음성 해설, 장면별 '직접 해 보기', 놀이터, 퀴즈, 용어집, 수업용 MP4 영상이 있습니다.
+모든 튜토리얼에 자막과 음성 해설, 장면별 '직접 해 보기', 놀이터, 퀴즈, 용어집이 있습니다.
 
 ## 보는 방법
 
 - **웹 주소**: 저장소 **Settings → Pages**에서 *Deploy from a branch* → `main` / `(root)`를 고르면 `https://vadoro.github.io/dh_tutorials/` 에서 열립니다.
 - **내 컴퓨터에서**: 저장소를 내려받아 맨 위의 `index.html`을 더블클릭하세요. 설치할 것이 없고, 인터넷이 없으면 글꼴만 기본 한글 글꼴로 바뀝니다.
-- **영상 파일**: 1080p MP4는 [GitHub Releases의 `videos`](https://github.com/vadoro/dh_tutorials/releases/tag/videos)에 모여 있습니다. 첫 화면 카드의 ‘MP4 내려받기’로도 받을 수 있어요. 자막 원고(.srt)는 각 튜토리얼의 `video/` 폴더에 있습니다.
 
 ## 구조
 
@@ -50,8 +49,8 @@ CLAUDE.md               새 튜토리얼을 만들 때 지킬 규칙과 확인 �
    node tools/render-video.cjs word-embedding               # → word-embedding/video/word-embedding.mp4 + .srt
    node tools/render-video.cjs word-embedding --poster 26   # → word-embedding/docs/poster.jpg
    ```
-4. MP4는 저장소에 커밋하지 않고 GitHub Releases의 `videos` 릴리스에 올립니다. 올리는 법은 [`.github/workflows/upload-videos.yml`](.github/workflows/upload-videos.yml) 맨 위에 있어요.
-5. `assets/catalog.js`에 항목을 추가하면(`video`에는 릴리스 주소) 첫 화면에 카드가 생깁니다. 이 README의 표에도 한 줄을 추가합니다.
+4. MP4는 공개하지 않습니다. 첫 화면과 README에는 ‘인터랙티브로 보기’만 둬요. 직접 쓰려고 보관할 때는 [`.github/workflows/keep-videos.yml`](.github/workflows/keep-videos.yml) 맨 위를 보세요.
+5. `assets/catalog.js`에 항목을 추가하면 첫 화면에 카드가 생깁니다. 이 README의 표에도 한 줄을 추가합니다.
 
 자세한 규칙(장면 형식, 음성 해설 동작, 퀴즈·용어집 형식, 영상 렌더링, 확인 목록)은 [CLAUDE.md](CLAUDE.md)에 있습니다.
 

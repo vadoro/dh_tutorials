@@ -18,7 +18,6 @@
 | --- | --- |
 | **웹 주소** | `https://vadoro.github.io/dh_tutorials/sentiment-analysis/` |
 | **`index.html` 더블클릭** | 저장소를 내려받아 `sentiment-analysis/index.html`을 열면 끝. 설치도, 서버도 필요 없어요. 인터넷이 없으면 글꼴만 기본 한글 글꼴로 바뀌어요. |
-| **MP4 영상** | [`sentiment-analysis.mp4` 내려받기](https://github.com/vadoro/dh_tutorials/releases/download/videos/sentiment-analysis.mp4) ([GitHub Releases](https://github.com/vadoro/dh_tutorials/releases/tag/videos)) — 1080p, 자막 포함, 장(chapter) 표시. 자막 원고는 [`video/sentiment-analysis.srt`](video/sentiment-analysis.srt). |
 
 ## 무엇을 배우나요
 
@@ -123,7 +122,7 @@ examples/lexicon.tsv        감성 사전 (어간, 점수)
 examples/reviews.tsv        학습·시험 서평 (split, label, text, lemmas)
 examples/heungbu.txt        흥부전 문장 14개
 examples/sentiment_basics.py  같은 계산을 파이썬·scikit-learn으로
-video/                      자막 원고(SRT). MP4는 GitHub Releases에 있어요
+video/                      자막 원고(SRT)
 docs/poster.jpg             사이트 카드 그림
 ```
 
@@ -139,7 +138,7 @@ node tools/render-video.cjs sentiment-analysis --frames 70,226   # 몇 장면만
 node tools/render-video.cjs sentiment-analysis --poster 287      # 카드 그림 → sentiment-analysis/docs/poster.jpg
 ```
 
-새로 뽑은 MP4는 저장소에 커밋하지 않고 GitHub Releases의 `videos` 릴리스에 올립니다. 올리는 법은 [`.github/workflows/upload-videos.yml`](../.github/workflows/upload-videos.yml) 맨 위에 있어요.
+MP4는 사이트에 올리지 않아요. 방문자는 인터랙티브 페이지로 보게 하려는 것이에요. 수업 등에 직접 쓰려고 뽑은 MP4는 저장소에 커밋하지 말고, 보관하려면 '영상 보관' 워크플로([`.github/workflows/keep-videos.yml`](../.github/workflows/keep-videos.yml))로 주인만 보는 비공개 릴리스에 넣으세요.
 
 `index.html#export`로 열면 페이지가 추출 모드가 되어 정해진 시각의 장면을 그대로 그려요. 그림은 시각과 상태만으로 정해지므로 같은 시각이면 언제나 같은 그림이 나와요.
 
