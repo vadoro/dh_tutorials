@@ -61,6 +61,8 @@ a { color: var(--accent-2); text-underline-offset: 3px; }
 .hero p { margin: 0; color: var(--muted); font-size: 17px; max-width: 64ch; }
 .common { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0; margin: 18px 0 0; font-size: 14px; color: var(--muted); }
 .common li { display: inline-flex; align-items: center; gap: 6px; }
+.visits { margin: 12px 0 0; font-size: 14px; color: var(--muted); }
+.visits b { font-family: var(--mono); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .common li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); }
 
 /* 거르기 */

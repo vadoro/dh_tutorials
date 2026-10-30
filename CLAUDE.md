@@ -9,7 +9,8 @@
 index.html              사이트 첫 화면 (카드 목록, assets/catalog.js를 읽어 그림)
 assets/catalog.js       튜토리얼 목록 — 첫 화면과 상단 바가 함께 씀 (단일 출처)
 assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바 (섀도 DOM, 추출 화면에서는 안 붙음)
-assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.js의 site.stats에 코드를 적으면 켜짐. 사이트 주소에서만 세고 file://·미리보기·추출 화면은 안 셈
+assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.js의 site.stats에 코드를 적으면 켜짐. 사이트 주소에서만 세고 file://·미리보기·추출 화면은 안 셈.
+                        [data-dh-count="경로|TOTAL"] 요소에 방문 수를 보여 줌(첫 화면의 누적 방문, 카드별 방문)
 assets/site.css         사이트 페이지 디자인 토큰(밝은/어두운 테마)
 shared/narration.js     공통 부품: 음성 해설 (DH.narration)
 shared/quiz.js          공통 부품: 퀴즈 (DH.quiz)
