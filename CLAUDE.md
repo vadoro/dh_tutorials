@@ -31,6 +31,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 - `bertopic/` BERTopic 토픽 지도 — `index.html` 한 파일에 모두 들어 있음
 - `tf-idf/` 단어의 무게, 문서의 거리 — 템플릿에서 시작. 계산 `assets/js/corpus.js`, 장면 `assets/js/scenes.js`, 페이지 동작 `assets/js/app.js`
 - `sentiment-analysis/` 글에 담긴 마음 — `tf-idf/`와 같은 구조. 계산 `assets/js/sentiment.js`, 장면 `assets/js/scenes.js`, 페이지 동작 `assets/js/app.js`
+- `word-embedding/` 단어를 지도 위에 — `tf-idf/`와 같은 구조. 계산 `assets/js/embedding.js`(word2vec 스킵그램을 시드 고정으로 직접 학습), 장면 `assets/js/scenes.js`, 페이지 동작 `assets/js/app.js`
 - `_template/` 템플릿 — `catalog.js`에 없으므로 첫 화면·상단 바 메뉴에 나오지 않음. 주소로는 열림(`_template/index.html`)
 
 두 폴더는 원래 `vadoro/network_tutorial`, `vadoro/bertopic_tutorial` 저장소였고 `git subtree`로 커밋 기록과 함께 옮겼습니다.

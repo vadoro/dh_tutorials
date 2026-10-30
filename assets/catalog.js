@@ -70,5 +70,17 @@ window.DH_CATALOG = {
       thumb: 'sentiment-analysis/docs/poster.jpg',
       added: '2026-10-29',
     },
+    {
+      slug: 'word-embedding',
+      title: '단어를 지도 위에',
+      topic: '워드 임베딩',
+      summary: '원-핫 인코딩에서 출발해 분포 가설, 함께 나오는 단어 세기, word2vec 학습을 따라가며 단어를 짧은 벡터로 바꾸고, 가까운 단어와 유추(조선 : 한양 = 고려 : ?), 한계와 디지털 인문학 활용까지 살펴봅니다.',
+      length: '6:14',
+      scenes: 11,
+      features: ['음성 해설', '장면별 실습', '놀이터', '퀴즈', '용어집', '파이썬 예제'],
+      tags: ['텍스트 데이터'],
+      thumb: 'word-embedding/docs/poster.jpg',
+      added: '2026-10-30',
+    },
   ],
 };
