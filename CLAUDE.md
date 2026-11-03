@@ -11,6 +11,7 @@ assets/catalog.js       튜토리얼 목록 — 첫 화면과 상단 바가 함�
 assets/site-bar.js      각 튜토리얼 위에 붙는 공통 상단 바 (섀도 DOM, 추출 화면에서는 안 붙음)
 assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.js의 site.stats에 코드를 적으면 켜짐. 사이트 주소에서만 세고 file://·미리보기·추출 화면은 안 셈.
                         [data-dh-count="경로|TOTAL"] 요소에 방문 수를 보여 줌(첫 화면의 누적 방문, 카드별 방문, 튜토리얼 상단 바)
+assets/to-top.js        모든 페이지 오른쪽 아래의 ‘맨 위로’ 단추 (첫 화면 · 튜토리얼마다 stats.js 다음 줄에서 불러옴, 섀도 DOM, 추출 화면에서는 안 붙음)
 assets/site.css         사이트 페이지 디자인 토큰(밝은/어두운 테마)
 assets/favicon.svg      파비콘 — 인장 붉은색 둥근 사각형에 흰 DH(글자는 도형으로 그려 글꼴과 무관). favicon.ico(16·32·48)와 assets/apple-touch-icon.png(180)는 이 그림에서 만든 것
 shared/narration.js     공통 부품: 음성 해설 (DH.narration)
@@ -46,13 +47,13 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 - **외부 자원은 Google Fonts 글꼴만.** 스크립트·그림은 저장소 안에 둡니다. 글꼴이 없어도 깨지지 않게 대체 글꼴을 꼭 적습니다.
 - **쉬운 한국어.** 대상은 처음 배우는 학생입니다. 문장은 짧게, 전문 용어는 처음 나올 때 풀어서, 영어 이름은 괄호로 함께. 말투는 기존 튜토리얼처럼 "~예요/~해요".
 - **진짜 계산과 비유를 구분해 밝히기.** 페이지가 실제로 계산하는 값(중심성, HDBSCAN, c-TF-IDF 등)과 설명용으로 흉내 낸 부분을 README와 화면 각주에 적습니다. 숫자·기본값·공식은 공식 문서와 맞는지 확인합니다(필요하면 파이썬으로 같은 값을 재현해 확인).
-- **원래 화면을 유지.** 공통 상단 바나 사이트 쪽 변경이 영상 추출 결과를 바꾸면 안 됩니다. `site-bar.js`는 `#export`, `?render`일 때 아무것도 하지 않습니다.
+- **원래 화면을 유지.** 공통 상단 바나 사이트 쪽 변경이 영상 추출 결과를 바꾸면 안 됩니다. `site-bar.js` · `to-top.js`는 `#export`, `?render`일 때 아무것도 하지 않습니다.
 
 ## 새 튜토리얼 추가 절차
 
 1. 템플릿을 복사합니다: `cp -r _template <slug>`. slug는 영어 소문자와 `-` (예: `word-embedding`).
 2. 새 `index.html`에서 바꿀 곳(파일 맨 위 주석에도 적혀 있음)
-   - `<script src="../assets/site-bar.js" data-slug="<slug>">`의 `data-slug` (바로 다음 줄의 `../assets/stats.js`는 그대로 둠)
+   - `<script src="../assets/site-bar.js" data-slug="<slug>">`의 `data-slug` (바로 다음 두 줄의 `../assets/stats.js` · `../assets/to-top.js`는 그대로 둠)
    - `<title>` 바로 아래 파비콘 세 줄(`../favicon.ico`, `../assets/favicon.svg`, `../assets/apple-touch-icon.png`)은 그대로 둠
    - `<title>`, 머리말, 각주(진짜 계산/비유 구분)
    - 스크립트 "2. 데이터와 진짜 계산", "3. 장면 정의"(`CHAPTERS`, `CAPTIONS`, `END`, `POSTER`), "5. 장면 그리기"(`SCENES`), "7. 직접 해 보기"(`LABS`), "9. 놀이터", "10. 퀴즈"(10문제), 용어집 마크업
