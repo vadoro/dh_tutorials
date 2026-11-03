@@ -4,6 +4,7 @@
  *   <script src="../assets/to-top.js"></script>
  *
  * - 한 화면쯤 내려가면 오른쪽 아래에 나타나고, 누르면 페이지 맨 위로 올라갑니다.
+ *   큰 화면에서 페이지가 짧아 한 화면만큼 내려갈 수 없으면, 내려갈 수 있는 거리의 절반(최소 400px)에서 나타납니다.
  *   넓은 화면에서는 화살표 + ‘맨 위로’, 휴대폰 너비에서는 화살표만 있는 동그란 단추.
  * - 섀도 DOM 안에 그려서 튜토리얼마다 다른 CSS와 섞이지 않습니다. 밝은/어두운 테마를 따릅니다.
  * - 단추 위에서 누른 키(스페이스 등)는 튜토리얼 단축키(재생 등)로 넘기지 않습니다.
@@ -43,11 +44,12 @@
   var btn = shadow.querySelector('button');
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // 한 화면쯤 내려가면 보이기
+  // 한 화면쯤 내려가면 보이기. 페이지가 짧으면(큰 모니터의 첫 화면 등) 내려갈 수 있는 거리의 절반에서
   var queued = false;
   var sync = function () {
     queued = false;
-    var on = window.scrollY > Math.max(400, window.innerHeight * 0.9);
+    var room = document.documentElement.scrollHeight - window.innerHeight;
+    var on = window.scrollY > Math.max(400, Math.min(window.innerHeight * 0.9, room / 2));
     host.classList.toggle('on', on);
     btn.tabIndex = on ? 0 : -1;
     if (!on && shadow.activeElement === btn) btn.blur();
