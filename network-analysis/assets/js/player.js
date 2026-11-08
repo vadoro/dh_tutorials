@@ -60,7 +60,11 @@
       this.listeners = [];
       // 자막이 사라지기 시작하기 전(끝 0.3초 전)에 기다리도록 holdBefore를 줌
       this.narr = window.DH && window.DH.narration
-        ? window.DH.narration({ captions: CAPS, rate: () => this.speed, holdBefore: 0.3 })
+        ? window.DH.narration({
+          captions: CAPS, rate: () => this.speed, holdBefore: 0.3,
+          // 이 튜토리얼의 읽기 규칙 (괄호 속 영어 이름, →, ×, ÷ 같은 기호는 공통 부품이 바꿈)
+          read: [[/SNS/g, '에스엔에스'], [/CSV/g, '씨에스브이'], [/Gephi/g, '게피'], [/NetworkX/g, '네트워크엑스'], [/\s*=\s*/g, '이면 ']],
+        })
         : NO_NARRATION;
       this.started = false;
     }

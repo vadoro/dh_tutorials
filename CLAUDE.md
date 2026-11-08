@@ -14,14 +14,17 @@ assets/stats.js         방문자 통계 (GoatCounter, 쿠키 없음). catalog.j
 assets/to-top.js        모든 페이지 오른쪽 아래의 ‘맨 위로’ 단추 (첫 화면 · 튜토리얼마다 stats.js 다음 줄에서 불러옴, 섀도 DOM, 추출 화면에서는 안 붙음)
 assets/site.css         사이트 페이지 디자인 토큰(밝은/어두운 테마)
 assets/favicon.svg      파비콘 — 인장 붉은색 둥근 사각형에 흰 DH(글자는 도형으로 그려 글꼴과 무관). favicon.ico(16·32·48)와 assets/apple-touch-icon.png(180)는 이 그림에서 만든 것
-shared/narration.js     공통 부품: 음성 해설 (DH.narration)
+shared/narration.js     공통 부품: 음성 해설 (DH.narration) — 미리 만든 음성 파일이 있으면 그 파일로, 없으면 브라우저 음성으로
 shared/quiz.js          공통 부품: 퀴즈 (DH.quiz)
 shared/components.css   공통 부품 모양: 퀴즈(.dhq), 용어집(.dh-gloss)
 _template/index.html    새 튜토리얼의 출발점. 한 파일에 모든 기능이 동작하는 34초짜리 예시(단어 세기)
 tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리얼을 MP4·SRT·미리보기 그림으로
+tools/narration-pieces.cjs   음성 해설의 읽을 글 목록 → <slug>/audio/narration/pieces.json (아래 '음성 해설 파일')
+tools/voicestudio-narration.py  그 목록을 VoiceStudio 한국어 음성으로 → <slug>/audio/narration/k…….m4a + clips.js (voicestudio_common.py를 씀)
 <slug>/index.html       튜토리얼 본체. 폴더 안에서 완결됨
 <slug>/docs/poster.jpg  카드 미리보기 그림 1280×720
 <slug>/video/*.srt      자막 원고. MP4는 공개하지 않음 (아래 '영상')
+<slug>/audio/narration/ 음성 해설 파일(자막 하나 = 파일 하나), clips.js(파일 목록, 페이지가 <script>로 읽음), pieces.json(읽을 글)
 .github/workflows/keep-videos.yml  MP4를 주인만 보는 비공개 릴리스(초안 videos)에 보관하는 워크플로 (선택, Actions에서 손으로 실행)
 <slug>/tools/           그 튜토리얼의 영상 렌더러 등
 .nojekyll               GitHub Pages가 _로 시작하는 폴더도 그대로 내보내도록
@@ -75,7 +78,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
   - 장면 정의 예: `network-analysis/assets/js/scenes-a.js` 맨 위 주석, `bertopic/index.html`의 `CHAPTERS`/`CAPTIONS`.
   - **재생 중 매 프레임 DOM을 다시 만들지 마세요.** 특히 단추 안의 아이콘(`innerHTML`)을 매 프레임 바꾸면, 누르고 떼는 사이에 아이콘이 교체되어 브라우저가 클릭을 버립니다(BERTopic 일시정지 단추가 아이콘 한가운데를 누르면 안 먹던 원인). 상태가 바뀔 때만 갱신하세요.
 - **자막**: `[시작 초, (끝 초,) '문장']`. 한 자막은 4~7초 분량. `**굵게**`나 강조 표시는 튜토리얼 방식을 따름.
-- **음성 해설(V)**: 공통 부품 `DH.narration`을 씁니다(아래 '공통 부품'). 브라우저 `speechSynthesis`로 자막을 읽고, 다 읽을 때까지 그 자막 끝에서 영상이 기다립니다. 튜토리얼은 약어 읽기 규칙만 넘기면 됩니다(예: c-TF-IDF → "씨 티에프 아이디에프").
+- **음성 해설(V)**: 공통 부품 `DH.narration`을 씁니다(아래 '공통 부품'). VoiceStudio로 미리 만든 한국어 음성 파일(`audio/narration/`)로 자막을 읽고, 파일이 없는 자막만 브라우저 `speechSynthesis`로 읽어요. 다 읽을 때까지 그 자막 끝에서 영상이 기다립니다. 튜토리얼은 약어 읽기 규칙만 넘기면 됩니다(예: c-TF-IDF → "씨 티에프 아이디에프"). 자막 속 영어도 영어 목소리로 바꾸지 않고 한국어 목소리로 한 번에 읽어요(목소리가 바뀌며 끊기지 않게).
 - **장면별 '직접 해 보기'**: 지금 장면에 맞춰 바뀌는 패널. 사용자가 조작하면 영상은 멈추고, 재생하면 영상 흐름으로 돌아갑니다.
 - **놀이터**: 영상의 핵심 계산을 사용자가 직접 바꿔 보는 곳. 결과 표와 "지금 설정을 코드로" 보기를 함께 둡니다.
 - **퀴즈 10문제**: 공통 부품 `DH.quiz`. 영상 순서대로. 정답 위치가 한쪽에 몰리지 않게 섞고, 답하면 바로 해설. 그림 문제는 페이지의 계산으로 정답을 정하고, 맞지 않으면 콘솔 경고를 냅니다.
@@ -90,14 +93,17 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 ```html
 <link rel="stylesheet" href="../shared/components.css">   <!-- 튜토리얼 CSS보다 앞에 -->
 <script src="../shared/narration.js"></script>
+<script src="audio/narration/clips.js"></script>   <!-- 음성 해설 파일을 만든 뒤에 (파일이 없으면 404 오류) -->
 <script src="../shared/quiz.js"></script>
 ```
 
-- **`DH.narration({ captions, read, rate, holdBefore })`** — `captions`는 `[{ start, end, text }]`(영상 전체 기준 초). 돌려받은 객체로
+- **`DH.narration({ captions, read, rate, holdBefore, clips })`** — `captions`는 `[{ start, end, text }]`(영상 전체 기준 초). `clips`는 미리 만든 음성 파일 목록(기본 `window.DH_CLIPS`, `audio/narration/clips.js`가 만듦). 돌려받은 객체로
   - 재생 중 매 프레임: `T = narr.hold(T, T + dt * speed)` 다음 `narr.sync(T, playing)`
   - 일시정지·이동·재생 시작: `narr.reset()`
   - 단추: `DH.narration.bind(narr, 단추, 안내문, { onEnable() { if (!started) play(); } })` — 지원하지 않는 브라우저면 단추를 숨김
   - `**`, ①~⑤, →, …, ·, ×, ÷ 같은 기호 읽기는 부품이 처리합니다. `read`에는 그 튜토리얼의 약어만 `[[정규식, '읽는 법']]`으로.
+  - 우리말 뒤 괄호 속 영어 이름(`노드(node)`, `분포 가설(distributional hypothesis)`)은 소리 내어 읽지 않아요(같은 말을 두 번 읽게 되니까). 짧은 대문자 약어(`(NSMC)`, `(TF)`)는 읽으니 `read`에 읽는 법을 적어요.
+  - 읽기 조각: 자막 하나 = 조각 하나, 글 = 읽기 바꾸기를 거친 자막, id = `DH.narration.pieceId(글)`. `narr.pieces()`가 목록을 돌려주고, 마지막으로 만든 객체는 `DH.narration.last`.
   - 추출 모드에서는 만들지 말고 `{ supported: false, reset() {}, hold: (T, n) => n, sync() {} }` 같은 빈 객체를 씁니다(템플릿 참고).
 - **`DH.quiz({ list, score, reset, done, questions })`** — 문제는 `{ q, opts, a, why }`. 그림 문제는 `figure: { width, height, label, draw(g, st), pick(x, y) }`를 더합니다. `draw`는 논리 좌표로 그리고 `st = { done, pick, answer, hover }`를 보고 정답/오답/마우스 올림을 표시합니다. `pick`은 좌표 → 보기 번호(없으면 -1).
 - **색과 글꼴**: 공통 CSS는 아래 변수만 씁니다. 튜토리얼 `:root`에서 자기 토큰에 연결하면 밝은/어두운 테마를 따라갑니다.
@@ -105,6 +111,19 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
   --dh-text --dh-muted --dh-surface --dh-surface-2 --dh-line --dh-accent --dh-ok --dh-no --dh-display --dh-mono
   ```
 - 부품 함수는 클래식 스크립트 전역 `window.DH`에 붙습니다(`type="module"`을 쓰지 않는 원칙 때문).
+
+## 음성 해설 파일 (VoiceStudio)
+
+해설은 VoiceStudio(로컬 음성 합성 앱, OmniVoice 엔진, 비상업용 라이선스)로 미리 만든 한국어 음성으로 읽어요. 목소리는 「튜토리얼 내레이터 (젊은 여성)」(영어 튜토리얼 사이트의 한국어 해설과 같음). VoiceStudio가 켜진 맥에서:
+```bash
+node tools/narration-pieces.cjs <slug>            # 읽을 글 목록 → <slug>/audio/narration/pieces.json (페이지를 열어 DH.narration.last.pieces()를 받아 적음)
+python3 tools/voicestudio-narration.py <slug>     # 조각마다 음성 파일(.m4a, ffmpeg가 있으면 .mp3) + clips.js. 이미 만든 파일은 건너뜀
+python3 tools/voicestudio-narration.py <slug> --limit 3   # 먼저 몇 개만 들어 보기
+```
+- 파일 이름 = 조각 id라서, 자막이나 읽기 규칙(`read`)을 고치면 그 자막만 새 id가 돼요. 목록을 다시 만들고 도구를 다시 돌리면 바뀐 자막만 새로 만들고, 사라진 조각의 파일은 지워도 된다고 알려 줘요. 다시 만들기 전에도 파일이 없는 자막은 브라우저 음성으로 읽으니 해설이 끊기지 않아요.
+- 엔진에 넘길 때 괄호는 쉼으로 바꿔요(`값(내적)을` → '값, 내적을'). 파일 이름은 원래 글로 정하니 바뀌지 않아요(`voicestudio_common.speakable`).
+- 엔진은 가끔 무음 · 잡음을 내거나 말을 건너뛰어요. 도구가 1초에 읽은 음절 수로 걸러 seed를 바꿔 다시 만들고, 그래도 이상하면 '확인 필요'로 알려 줘요. 한 파일만 다시 만들려면 그 파일을 지우고 `--seed`를 바꿔 다시 실행하세요. 만든 뒤에는 받아쓰기(Whisper)로 글과 맞는지 확인합니다.
+- 새 튜토리얼은 파일을 만든 뒤에 `<script src="audio/narration/clips.js">`를 `../shared/narration.js` 다음 줄에 넣어요.
 
 ## 디자인
 
@@ -144,7 +163,7 @@ tools/render-video.cjs  공통 렌더러: DH_EXPORT 약속을 지킨 튜토리�
 헤드리스 Chromium(Playwright, `/opt/pw-browsers`)으로:
 - 콘솔 오류 0개. 재생, 장 이동, 직접 해 보기, 놀이터, 퀴즈를 실제로 눌러 봄.
 - 단추는 **사람 속도로** 눌러 확인: 화면에 보이게 스크롤한 뒤 단추 한가운데에서 `mouse.down()` → 0.15초 기다림 → `mouse.up()`. `page.click()`은 즉시 누르고 떼서 위 같은 문제를 놓칩니다. 재생 중 일시정지, 다시 재생 둘 다 확인.
-- 음성 해설: `speechSynthesis`를 가짜로 바꿔(`page.addInitScript`) 느리게 읽힐 때 영상이 자막 끝에서 기다리는지 확인.
+- 음성 해설: `speechSynthesis`를 가짜로 바꿔(`page.addInitScript`) 느리게 읽힐 때 영상이 자막 끝에서 기다리는지 확인. 음성 파일이 있는 튜토리얼은 `DH_CLIPS`의 파일 수가 `narr.pieces()`와 같은지, 파일이 실제로 불러와지는지(네트워크 200)도 확인.
 - 데스크톱 1280px·휴대폰 390px, 밝은·어두운 테마 화면을 찍어 겹침·잘림 확인. 390px에서 `scrollWidth === innerWidth`.
 - 사이트 쪽이나 공통 부품만 바꿨다면 추출 프레임이 바꾸기 전과 바이트 단위로 같은지 비교(`cmp`): `node tools/render-video.cjs <slug> --frames …`를 바꾸기 전후로 뽑아 비교.
 - 공통 부품(`shared/`)을 바꿨다면 모든 튜토리얼과 `_template/`에서 퀴즈(그림 문제 포함)와 음성 해설을 다시 확인.

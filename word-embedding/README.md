@@ -101,13 +101,14 @@ index.html                   페이지 (영상 플레이어 · 직접 해 보기
 assets/js/embedding.js       예시 말뭉치와 진짜 계산 (동시 출현, word2vec 학습, 가까운 단어, 유추, PCA)
 assets/js/scenes.js          영상 장면 11개, 장 목록과 자막
 assets/js/app.js             플레이어, 직접 해 보기, 놀이터, 퀴즈, 영상 추출(DH_EXPORT)
+audio/narration/             음성 해설 파일 (자막마다 한 개, clips.js 목록 · pieces.json 읽을 글)
 examples/corpus.tsv          예시 말뭉치 (원문, 낱말 원형)
 examples/embedding_basics.py 같은 계산을 파이썬으로 (+ gensim 비교)
 video/                       자막 원고(SRT)
 docs/poster.jpg              사이트 카드 그림
 ```
 
-음성 해설과 퀴즈 화면은 사이트 공통 부품(`../shared/`)을 씁니다.
+음성 해설과 퀴즈 화면은 사이트 공통 부품(`../shared/`)을 씁니다. 음성 해설은 VoiceStudio로 미리 만든 한국어 음성(「튜토리얼 내레이터 (젊은 여성)」, `audio/narration/`, 자막 하나에 파일 하나)으로 읽고, 파일이 없는 자막만 브라우저 음성으로 읽어요. 자막을 고치면 그 자막의 음성 파일도 다시 만들어요(루트 `CLAUDE.md`의 ‘음성 해설 파일’).
 
 ## 영상 다시 만들기
 
