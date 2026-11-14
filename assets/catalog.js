@@ -18,12 +18,8 @@ window.DH_CATALOG = {
   site: {
     title: 'DH 튜토리얼',
     repo: 'https://github.com/vadoro/dh_tutorials',
-    // 방문자 통계 (assets/stats.js). goatcounter에 GoatCounter 코드를 적으면 켜지고, host 주소에서 연 페이지만 셉니다.
-    // ga: 구글 애널리틱스(GA4) 측정 ID와 셀 사이트 주소들 (김용수 사이트 · 영어 튜토리얼과 같은 ID)
-    stats: {
-      goatcounter: 'dh-tutorials', host: 'vadoro.github.io',
-      ga: { id: 'G-9W6JM2ECKR', hosts: ['dhtutorials.vercel.app', 'vadoro.github.io'] },
-    },
+    // 방문자 통계 (assets/stats.js): 구글 애널리틱스(GA4) 측정 ID와 셀 사이트 주소들 (김용수 사이트 · 영어 튜토리얼과 같은 ID)
+    stats: { ga: { id: 'G-9W6JM2ECKR', hosts: ['dhtutorials.vercel.app', 'vadoro.github.io'] } },
   },
   tutorials: [
     {

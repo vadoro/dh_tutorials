@@ -63,8 +63,6 @@
   <footer class="foot">
     <p>DH 튜토리얼 · 새 튜토리얼은 같은 형식으로 계속 추가됩니다.</p>
     <p>만든 사람: <a href="https://yongsookim.vercel.app/" target="_blank" rel="noopener">김용수</a> (한림대학교 영어영문학과 · 디지털인문예술전공)</p>
-    <p class="visits" data-dh-count="TOTAL" hidden>누적 방문 <b data-n></b>회</p>
-    <p data-dh-stats hidden>방문 통계는 GoatCounter로 셉니다. 쿠키를 쓰지 않고 방문 수, 들어온 경로, 브라우저 종류 같은 묶음 통계만 남아서 개인을 알아볼 수 없어요.</p>
   </footer>
 </div>
 
@@ -94,7 +92,7 @@
         '<p class="topic">' + esc(t.topic) + '</p>' +
         '<h2><a href="' + esc(url) + '">' + esc(t.title) + '</a></h2>' +
         '<p class="sum">' + esc(t.summary) + '</p>' +
-        '<p class="meta">영상 ' + esc(t.length) + ' · 장면 ' + esc(t.scenes) + '개<span data-dh-count="' + esc(t.slug) + '/" hidden> · 방문 <span data-n></span>회</span></p>' +
+        '<p class="meta">영상 ' + esc(t.length) + ' · 장면 ' + esc(t.scenes) + '개</p>' +
         '<ul class="feats" aria-label="기능">' + t.features.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
         '<div class="actions">' +
           '<a class="btn" href="' + esc(url) + '">' + PLAY + '인터랙티브로 보기</a>' +
@@ -104,7 +102,6 @@
   function render() {
     var list = cat.tutorials.filter(function (t) { return current === '전체' || t.tags.indexOf(current) >= 0; });
     shelf.innerHTML = list.map(card).join('');
-    if (window.DH_STATS) window.DH_STATS.fill(shelf);   // 카드마다 방문 수 (assets/stats.js)
     filter.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.tag === current)); });
     var c = filter.querySelector('.count'); if (c) c.textContent = list.length + '개';
   }
