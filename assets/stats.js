@@ -3,6 +3,8 @@
  * 첫 화면과 각 튜토리얼 index.html이 catalog.js 다음에 불러옵니다.
  *   <script src="../assets/stats.js"></script>
  *
+ * - catalog.js의 site.stats.ga에 구글 애널리틱스(GA4) 측정 ID와 사이트 주소를 적으면 GA4도 켜집니다.
+ *   ga.hosts에 적은 주소(Vercel · GitHub Pages)에서 연 페이지만 셉니다. 통계는 https://analytics.google.com 에서 봅니다.
  * - catalog.js의 site.stats.goatcounter에 GoatCounter 코드를 적으면 켜집니다(비워 두면 아무것도 보내지 않음).
  *   예: 'dh-tutorials' → https://dh-tutorials.goatcounter.com 에서 통계를 봅니다.
  * - 사이트 주소(site.stats.host)에서 열었을 때만 셉니다. 내 컴퓨터에서 연 파일, 미리보기,
@@ -18,8 +20,23 @@
 (function () {
   'use strict';
   var cat = window.DH_CATALOG, st = cat && cat.site && cat.site.stats;
-  if (!st || !st.goatcounter || location.hostname !== st.host) return;
+  if (!st) return;
   if (location.hash === '#export' || new URLSearchParams(location.search).has('render')) return;
+
+  // 구글 애널리틱스(GA4) — ga.hosts에 적은 사이트 주소에서만
+  var ga = st.ga;
+  if (ga && ga.id && (ga.hosts || []).indexOf(location.hostname) >= 0) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', ga.id);
+    var g = document.createElement('script');
+    g.async = true;
+    g.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(ga.id);
+    document.head.appendChild(g);
+  }
+
+  if (!st.goatcounter || location.hostname !== st.host) return;
 
   var base = 'https://' + st.goatcounter + '.goatcounter.com';
   window.goatcounter = { path: function (p) { return p.replace(/index\.html(?=\?|$)/, ''); } };
